@@ -15,6 +15,7 @@ import {
   Tooltip,
   Legend,
   Filler,
+  type TooltipItem,
 } from 'chart.js'
 import annotationPlugin from 'chartjs-plugin-annotation'
 import { Line } from 'react-chartjs-2'
@@ -123,15 +124,15 @@ export function WinRateOverTime({ trades, timePeriod = 'month' }: WinRateOverTim
         borderWidth: 1,
         cornerRadius: 8,
         callbacks: {
-          title: function(context: { dataIndex: number; label: string }[]) {
+          title: function(context: TooltipItem<'line'>[]) {
             const dataIndex = context[0].dataIndex
             return chartData.rawData[dataIndex]?.fullDate || context[0].label
           },
-          label: function(context: { dataIndex: number; parsed: { y: number } }) {
+          label: function(context: TooltipItem<'line'>) {
             const dataIndex = context.dataIndex
             const data = chartData.rawData[dataIndex]
             return [
-              `Taux de réussite: ${context.parsed.y.toFixed(1)}%`,
+              `Taux de réussite: ${(context.parsed.y ?? 0).toFixed(1)}%`,
               `Trades dans la fenêtre: ${data?.trades || 0}`
             ]
           }
@@ -140,7 +141,7 @@ export function WinRateOverTime({ trades, timePeriod = 'month' }: WinRateOverTim
       annotation: {
         annotations: {
           line50: {
-            type: 'line',
+            type: 'line' as const,
             yMin: 50,
             yMax: 50,
             borderColor: isDark ? '#6b7280' : '#9ca3af',
@@ -149,7 +150,7 @@ export function WinRateOverTime({ trades, timePeriod = 'month' }: WinRateOverTim
             label: {
               content: 'Seuil 50%',
               enabled: true,
-              position: 'end',
+              position: 'end' as const,
               backgroundColor: isDark ? 'rgba(30, 30, 30, 0.8)' : 'rgba(255, 255, 255, 0.8)',
               color: isDark ? '#e8e8e8' : '#0f172a',
               font: {
@@ -183,8 +184,8 @@ export function WinRateOverTime({ trades, timePeriod = 'month' }: WinRateOverTim
           font: {
             size: 11
           },
-          callback: function(value: number) {
-            return value + '%'
+          callback: function(value: string | number) {
+            return Number(value) + '%'
           }
         },
       },

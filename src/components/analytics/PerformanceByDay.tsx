@@ -13,6 +13,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  type TooltipItem,
 } from 'chart.js'
 import { Bar } from 'react-chartjs-2'
 
@@ -121,15 +122,15 @@ export function PerformanceByDay({ trades, timePeriod = 'month' }: PerformanceBy
         borderWidth: 1,
         cornerRadius: 8,
         callbacks: {
-          title: function(context: { dataIndex: number; label: string }[]) {
+          title: function(context: TooltipItem<'bar'>[]) {
             const dataIndex = context[0].dataIndex
             return `Jour: ${chartData.rawData[dataIndex]?.day || context[0].label}`
           },
-          label: function(context: { dataIndex: number; parsed: { y: number } }) {
+          label: function(context: TooltipItem<'bar'>) {
             const dataIndex = context.dataIndex
             const data = chartData.rawData[dataIndex]
             return [
-              `Profit: $${context.parsed.y.toFixed(2)}`,
+              `Profit: $${(context.parsed.y ?? 0).toFixed(2)}`,
               `Trades: ${data?.count}`,
               `Taux de réussite: ${data?.winRate}%`
             ]
@@ -158,8 +159,8 @@ export function PerformanceByDay({ trades, timePeriod = 'month' }: PerformanceBy
           font: {
             size: 11
           },
-          callback: function(value: number) {
-            return '$' + value.toFixed(0)
+          callback: function(value: string | number) {
+            return '$' + Number(value).toFixed(0)
           }
         },
       },

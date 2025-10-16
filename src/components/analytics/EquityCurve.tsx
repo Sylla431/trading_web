@@ -12,6 +12,7 @@ import {
   Tooltip,
   Legend,
   Filler,
+  type TooltipItem,
 } from 'chart.js'
 import { Line } from 'react-chartjs-2'
 import type { Trade } from '@/types'
@@ -102,12 +103,12 @@ export function EquityCurve({ trades, timePeriod = 'month' }: EquityCurveProps) 
         borderWidth: 1,
         cornerRadius: 8,
             callbacks: {
-              title: function(context: { dataIndex: number; label: string }[]) {
+              title: function(context: TooltipItem<'line'>[]) {
                 const dataIndex = context[0].dataIndex
                 return data[dataIndex]?.fullDate || context[0].label
               },
-              label: function(context: { parsed: { y: number } }) {
-                return `Capital: ${context.parsed.y.toFixed(2)} $`
+              label: function(context: TooltipItem<'line'>) {
+                return `Capital: ${(context.parsed.y ?? 0).toFixed(2)} $`
               }
             }
       }
@@ -134,15 +135,15 @@ export function EquityCurve({ trades, timePeriod = 'month' }: EquityCurveProps) 
           font: {
             size: 11
           },
-          callback: function(value: number) {
-            return '$' + value.toFixed(0)
+          callback: function(value: string | number) {
+            return '$' + Number(value).toFixed(0)
           }
         },
       },
     },
     animation: {
       duration: 2000,
-      easing: 'easeInOutQuart',
+      easing: 'easeInOutQuart' as const,
     },
     interaction: {
       intersect: false,

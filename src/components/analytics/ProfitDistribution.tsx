@@ -10,6 +10,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  type TooltipItem,
 } from 'chart.js'
 import { Bar } from 'react-chartjs-2'
 import type { Trade } from '@/types'
@@ -103,9 +104,9 @@ export function ProfitDistribution({ trades, timePeriod = 'month' }: ProfitDistr
         borderWidth: 1,
         cornerRadius: 6,
           callbacks: {
-            label: function(context: { label?: string; parsed: { y: number }; dataIndex: number }): string {
+            label: function(context: TooltipItem<'bar'>): string {
               const label = context.label || ''
-              const value = context.parsed.y
+              const value = context.parsed.y ?? 0
               const index = context.dataIndex
               
               if (index === 0) {
@@ -135,8 +136,8 @@ export function ProfitDistribution({ trades, timePeriod = 'month' }: ProfitDistr
         },
         ticks: {
           color: isDark ? '#e8e8e8' : '#0f172a',
-          callback: function(value: number): string {
-            return '$' + value.toFixed(0)
+          callback: function(value: string | number): string {
+            return '$' + Number(value).toFixed(0)
           }
         },
       },

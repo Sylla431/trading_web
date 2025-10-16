@@ -13,6 +13,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  type TooltipItem,
 } from 'chart.js'
 import { Bar } from 'react-chartjs-2'
 
@@ -136,15 +137,15 @@ export function EmotionAnalysis({ trades, timePeriod = 'month' }: EmotionAnalysi
         borderWidth: 1,
         cornerRadius: 8,
           callbacks: {
-            title: function(context: { dataIndex: number; label: string }[]) {
+            title: function(context: TooltipItem<'bar'>[]) {
               return `Émotion: ${context[0].label}`
             },
-            label: function(context: { dataset: { label?: string }; parsed: { y: number } }) {
+            label: function(context: TooltipItem<'bar'>) {
               const datasetLabel = context.dataset.label || ''
               const value = context.parsed.y
               return `${datasetLabel}: ${value} trades`
             },
-            afterBody: function(context: { dataIndex: number }[]) {
+            afterBody: function(context: TooltipItem<'bar'>[]) {
               const dataIndex = context[0].dataIndex
               const data = chartData.rawData[dataIndex]
               return [
