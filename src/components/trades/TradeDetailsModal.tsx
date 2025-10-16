@@ -7,6 +7,7 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import type { Trade } from '@/types'
 import { cn } from '@/lib/utils/cn'
+import { translateEmotionBefore, translateEmotionAfter } from '@/lib/utils/emotionTranslations'
 
 interface TradeDetailsModalProps {
   trade: Trade
@@ -173,13 +174,13 @@ export function TradeDetailsModal({ trade, onClose, onEdit, onDuplicate }: Trade
                   {trade.emotion_before && (
                     <div className="p-3 rounded-xl bg-secondary/30">
                       <p className="text-xs text-muted-foreground mb-1">Émotion avant</p>
-                      <p className="text-sm font-medium capitalize">{trade.emotion_before}</p>
+                      <p className="text-sm font-medium">{translateEmotionBefore(trade.emotion_before)}</p>
                     </div>
                   )}
                   {trade.emotion_after && (
                     <div className="p-3 rounded-xl bg-secondary/30">
                       <p className="text-xs text-muted-foreground mb-1">Émotion après</p>
-                      <p className="text-sm font-medium capitalize">{trade.emotion_after}</p>
+                      <p className="text-sm font-medium">{translateEmotionAfter(trade.emotion_after)}</p>
                     </div>
                   )}
                 </div>

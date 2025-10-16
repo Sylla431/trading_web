@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { EmotionBeforeType, EmotionAfterType } from '@/types'
 
 const optionalPositiveNumber = z
   .preprocess((v) => {
@@ -43,10 +44,10 @@ export const tradeSchema = z
     notes: z.string().optional(),
     lesson_learned: z.string().optional(),
     emotion_before: z
-      .enum(['excellent', 'good', 'neutral', 'bad', 'terrible'])
+      .enum(['confident', 'calm', 'neutral', 'stressed', 'fearful'] as const satisfies readonly EmotionBeforeType[])
       .optional(),
     emotion_after: z
-      .enum(['excellent', 'good', 'neutral', 'bad', 'terrible'])
+      .enum(['confident', 'calm', 'neutral', 'stressed', 'fearful', 'euphoric', 'frustrated', 'relieved'] as const satisfies readonly EmotionAfterType[])
       .optional(),
     discipline_score: optionalNumber.refine((v) => v === undefined || (v >= 1 && v <= 10), {
       message: 'Doit être entre 1 et 10',

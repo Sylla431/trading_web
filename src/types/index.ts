@@ -2,12 +2,24 @@ export type TradeType = 'long' | 'short'
 export type OrderType = 'market' | 'limit' | 'stop' | 'stop_limit'
 export type TradeStatus = 'open' | 'closed' | 'cancelled'
 
-export type EmotionType = 
-  | 'excellent' 
-  | 'good' 
+export type EmotionBeforeType = 
+  | 'confident' 
+  | 'calm' 
   | 'neutral' 
-  | 'bad' 
-  | 'terrible'
+  | 'stressed' 
+  | 'fearful'
+
+export type EmotionAfterType = 
+  | 'confident' 
+  | 'calm' 
+  | 'neutral' 
+  | 'stressed' 
+  | 'fearful'
+  | 'euphoric'
+  | 'frustrated'
+  | 'relieved'
+
+export type EmotionType = EmotionBeforeType | EmotionAfterType
 
 export type SubscriptionTier = 'free' | 'pro' | 'premium'
 export type AccountType = 'individual' | 'coach' | 'analyst' | 'admin'
@@ -36,8 +48,8 @@ export interface Trade {
   tags?: string[]
   notes?: string
   lesson_learned?: string
-  emotion_before?: EmotionType
-  emotion_after?: EmotionType
+  emotion_before?: EmotionBeforeType
+  emotion_after?: EmotionAfterType
   discipline_score?: number
   screenshots?: string[]
   created_at: string

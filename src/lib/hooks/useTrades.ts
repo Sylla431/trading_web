@@ -154,6 +154,7 @@ export function useTrades(accountId?: string) {
 
   const updateTrade = async (id: string, updates: Partial<Trade>) => {
     try {
+      console.log('🔄 updateTrade appelé', { id, updates })
       // Normaliser potentiellement les dates si fournies et ajuster status
       const normalized: Record<string, unknown> = { ...updates }
       if (typeof updates.entry_time === 'string') normalized.entry_time = toIsoIfProvided(updates.entry_time)
@@ -193,10 +194,11 @@ export function useTrades(accountId?: string) {
 
       if (updateError) throw updateError
 
+      console.log('✅ Trade mis à jour avec succès:', data)
       setTrades(trades.map((t) => (t.id === id ? (data as Trade) : t)))
       return { data, error: null }
     } catch (err) {
-      console.error('Erreur lors de la mise à jour du trade:', err)
+      console.error('❌ Erreur lors de la mise à jour du trade:', err)
       return { data: null, error: err as Error }
     }
   }

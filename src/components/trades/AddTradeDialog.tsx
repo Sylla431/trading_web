@@ -41,7 +41,7 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
     watch,
     setValue,
     reset,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm({
     resolver: zodResolver(tradeSchema),
     mode: 'onChange',
@@ -84,8 +84,35 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
     return `${yyyy}-${mm}-${dd}T${hh}:${mi}`
   }
 
+  // Fonction pour convertir les anciennes valeurs d'émotion vers les nouvelles
+  const convertEmotion = (emotion: string | undefined): 'confident' | 'calm' | 'neutral' | 'stressed' | 'fearful' | undefined => {
+    if (!emotion) return undefined
+    
+    const emotionMap: Record<string, 'confident' | 'calm' | 'neutral' | 'stressed' | 'fearful'> = {
+      'excellent': 'confident',
+      'good': 'calm',
+      'neutral': 'neutral',
+      'bad': 'stressed',
+      'terrible': 'fearful',
+      // Nouvelles valeurs (déjà correctes)
+      'confident': 'confident',
+      'calm': 'calm',
+      'stressed': 'stressed',
+      'fearful': 'fearful'
+    }
+    
+    return emotionMap[emotion] || undefined
+  }
+
   useEffect(() => {
     if (tradeToEdit) {
+      console.log('🔄 Remplissage du formulaire avec:', {
+        emotion_before: tradeToEdit.emotion_before,
+        emotion_after: tradeToEdit.emotion_after,
+        emotion_before_type: typeof tradeToEdit.emotion_before,
+        emotion_after_type: typeof tradeToEdit.emotion_after
+      })
+      
       reset({
         account_id: (tradeToEdit as unknown as { account_id?: string }).account_id,
         symbol: tradeToEdit.symbol,
@@ -101,8 +128,8 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
         notes: tradeToEdit.notes,
         strategy_name: tradeToEdit.strategy_name,
         status: tradeToEdit.status,
-        emotion_before: tradeToEdit.emotion_before as 'excellent' | 'good' | 'neutral' | 'bad' | 'terrible' | undefined,
-        emotion_after: tradeToEdit.emotion_after as 'excellent' | 'good' | 'neutral' | 'bad' | 'terrible' | undefined,
+        emotion_before: convertEmotion(tradeToEdit.emotion_before),
+        emotion_after: convertEmotion(tradeToEdit.emotion_after),
         discipline_score: tradeToEdit.discipline_score,
       })
     } else if (tradeToDuplicate) {
@@ -123,8 +150,8 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
         notes: tradeToDuplicate.notes,
         strategy_name: tradeToDuplicate.strategy_name,
         status: 'open', // Set status to open
-        emotion_before: tradeToDuplicate.emotion_before as 'excellent' | 'good' | 'neutral' | 'bad' | 'terrible' | undefined,
-        emotion_after: tradeToDuplicate.emotion_after as 'excellent' | 'good' | 'neutral' | 'bad' | 'terrible' | undefined,
+        emotion_before: convertEmotion(tradeToDuplicate.emotion_before),
+        emotion_after: convertEmotion(tradeToDuplicate.emotion_after),
         discipline_score: tradeToDuplicate.discipline_score,
       })
     }
@@ -141,28 +168,40 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
     }
   }, [watchedExitPrice, setValue, watch, formatNowForInput])
 
+  // Debug: afficher les erreurs de validation
+  console.log('🔍 Erreurs de validation:', errors)
+  console.log('✅ Formulaire valide:', isValid)
+
   const onSubmit = async (data: TradeFormData) => {
+    console.log('🚀 onSubmit appelé', { isEdit, tradeToEdit: tradeToEdit?.id, data })
     setIsSubmitting(true)
     try {
       let error: Error | null = null
       
       if (isEdit && tradeToEdit) {
+        console.log('📝 Mode édition - Mise à jour du trade', tradeToEdit.id)
         const { error: updateErr } = await updateTrade(tradeToEdit.id, data)
         error = updateErr ?? null
+        console.log('✅ Résultat mise à jour:', { error })
       } else {
+        console.log('➕ Mode ajout - Nouveau trade')
         const { error: addErr } = await addTrade(data)
         error = addErr ?? null
+        console.log('✅ Résultat ajout:', { error })
       }
 
       if (error) {
+        console.error('❌ Erreur lors de l\'enregistrement:', error)
         toast.error('Erreur lors de l\'enregistrement', {
           description: error.message,
         })
       } else {
+        console.log('🎉 Succès:', isEdit ? 'Trade mis à jour' : 'Trade ajouté')
         toast.success(isEdit ? 'Trade mis à jour !' : 'Trade ajouté avec succès !')
         onClose()
       }
-    } catch {
+    } catch (err) {
+      console.error('💥 Erreur catch:', err)
       toast.error('Une erreur est survenue')
     } finally {
       setIsSubmitting(false)
@@ -456,26 +495,56 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
               </div>
             </div>
 
-            {/* État mental avant le trade */}
+            {/* État mental */}
             <div className="space-y-4">
-              <h3 className="font-semibold">État mental avant le trade</h3>
+              <h3 className="font-semibold">État mental</h3>
               
               <div className="space-y-3">
                 <Label>Humeur avant le trade</Label>
                 <div className="grid grid-cols-5 gap-2">
                   {[
-                    { value: 'excellent', label: 'Excellent', icon: '😄', color: 'text-green-600' },
-                    { value: 'good', label: 'Bien', icon: '🙂', color: 'text-green-500' },
+                    { value: 'confident', label: 'Confiant', icon: '😎', color: 'text-green-600' },
+                    { value: 'calm', label: 'Calme', icon: '😌', color: 'text-blue-500' },
                     { value: 'neutral', label: 'Neutre', icon: '😐', color: 'text-gray-500' },
-                    { value: 'bad', label: 'Mauvais', icon: '😟', color: 'text-orange-500' },
-                    { value: 'terrible', label: 'Terrible', icon: '😞', color: 'text-red-600' },
+                    { value: 'stressed', label: 'Stressé', icon: '😰', color: 'text-orange-500' },
+                    { value: 'fearful', label: 'Peur', icon: '😨', color: 'text-red-600' },
                   ].map((mood) => (
                     <button
                       key={mood.value}
                       type="button"
-                      onClick={() => setValue('emotion_before', mood.value as 'excellent' | 'good' | 'neutral' | 'bad' | 'terrible', { shouldDirty: true })}
+                      onClick={() => setValue('emotion_before', mood.value as 'confident' | 'calm' | 'neutral' | 'stressed' | 'fearful', { shouldDirty: true })}
                       className={`p-2 rounded-lg border-2 transition-all ${
                         watch('emotion_before') === mood.value
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="text-lg mb-1">{mood.icon}</div>
+                      <div className={`text-xs font-medium ${mood.color}`}>{mood.label}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <Label>Humeur après le trade</Label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { value: 'euphoric', label: 'Euphorique', icon: '🚀', color: 'text-green-600' },
+                    { value: 'confident', label: 'Confiant', icon: '😎', color: 'text-green-500' },
+                    { value: 'relieved', label: 'Soulagé', icon: '😌', color: 'text-blue-500' },
+                    { value: 'neutral', label: 'Neutre', icon: '😐', color: 'text-gray-500' },
+                    { value: 'frustrated', label: 'Frustré', icon: '😤', color: 'text-orange-500' },
+                    { value: 'stressed', label: 'Stressé', icon: '😰', color: 'text-orange-600' },
+                    { value: 'fearful', label: 'Peur', icon: '😨', color: 'text-red-500' },
+                    { value: 'calm', label: 'Calme', icon: '🧘', color: 'text-blue-600' },
+                  ].map((mood) => (
+                    <button
+                      key={mood.value}
+                      type="button"
+                      onClick={() => setValue('emotion_after', mood.value as 'confident' | 'calm' | 'neutral' | 'stressed' | 'fearful' | 'euphoric' | 'frustrated' | 'relieved', { shouldDirty: true })}
+                      className={`p-2 rounded-lg border-2 transition-all ${
+                        watch('emotion_after') === mood.value
                           ? 'border-primary bg-primary/10'
                           : 'border-border hover:border-primary/50'
                       }`}
@@ -566,8 +635,17 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
               <Button type="button" variant="outline" onClick={onClose}>
                 Annuler
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Ajout en cours...' : 'Ajouter le trade'}
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                onClick={() => {
+                  console.log('🖱️ Bouton cliqué!', { isEdit, isValid, errors })
+                }}
+              >
+                {isSubmitting 
+                  ? (isEdit ? 'Mise à jour...' : 'Ajout en cours...') 
+                  : (isEdit ? 'Mettre à jour le trade' : 'Ajouter le trade')
+                }
               </Button>
             </div>
           </form>
@@ -589,6 +667,6 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
         </Card>
       </div>
     </div>
-  </div>
+    </div>
   )
 }

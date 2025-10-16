@@ -2,9 +2,10 @@
 
 import { useMemo } from 'react'
 import { useTheme } from 'next-themes'
-import type { Trade, EmotionType } from '@/types'
+import type { Trade, EmotionBeforeType } from '@/types'
 import type { TimePeriod } from '@/components/analytics/TimePeriodFilter'
 import { filterTradesByTimePeriod } from '@/lib/utils/timeFilters'
+import { EMOTION_BEFORE_LABELS } from '@/lib/utils/emotionTranslations'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -31,12 +32,27 @@ interface EmotionAnalysisProps {
   timePeriod?: TimePeriod
 }
 
-const EMOTION_LABELS: Record<EmotionType, string> = {
-  excellent: 'Excellent',
-  good: 'Bien',
-  neutral: 'Neutre',
-  bad: 'Mauvais',
-  terrible: 'Terrible',
+// Utiliser les traductions centralisées
+const EMOTION_LABELS = EMOTION_BEFORE_LABELS
+
+// Fonction pour convertir les anciennes valeurs d'émotion vers les nouvelles
+const convertEmotion = (emotion: string | undefined): EmotionBeforeType | undefined => {
+  if (!emotion) return undefined
+  
+  const emotionMap: Record<string, EmotionBeforeType> = {
+    'excellent': 'confident',
+    'good': 'calm',
+    'neutral': 'neutral',
+    'bad': 'stressed',
+    'terrible': 'fearful',
+    // Nouvelles valeurs (déjà correctes)
+    'confident': 'confident',
+    'calm': 'calm',
+    'stressed': 'stressed',
+    'fearful': 'fearful'
+  }
+  
+  return emotionMap[emotion] || undefined
 }
 
 export function EmotionAnalysis({ trades, timePeriod = 'month' }: EmotionAnalysisProps) {
@@ -48,18 +64,20 @@ export function EmotionAnalysis({ trades, timePeriod = 'month' }: EmotionAnalysi
     const filteredTrades = timePeriod ? filterTradesByTimePeriod(trades, timePeriod) : trades
     
     const emotionStats = new Map<
-      EmotionType,
+      EmotionBeforeType,
       { wins: number; losses: number; totalProfit: number }
     >()
 
     filteredTrades
       .filter((t) => t.status === 'closed' && t.emotion_before && t.net_profit !== undefined && t.net_profit !== null)
       .forEach((trade) => {
-        const emotion = trade.emotion_before!
+        const convertedEmotion = convertEmotion(trade.emotion_before)
+        if (!convertedEmotion) return
+        
         const profit = trade.net_profit ?? 0
-        const existing = emotionStats.get(emotion) || { wins: 0, losses: 0, totalProfit: 0 }
+        const existing = emotionStats.get(convertedEmotion) || { wins: 0, losses: 0, totalProfit: 0 }
 
-        emotionStats.set(emotion, {
+        emotionStats.set(convertedEmotion, {
           wins: existing.wins + (profit > 0 ? 1 : 0),
           losses: existing.losses + (profit <= 0 ? 1 : 0),
           totalProfit: existing.totalProfit + profit,
@@ -199,10 +217,10 @@ export function EmotionAnalysis({ trades, timePeriod = 'month' }: EmotionAnalysi
           <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border/50">
             <div className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full ${
-                item.emotionKey === 'excellent' ? 'bg-green-500' :
-                item.emotionKey === 'good' ? 'bg-blue-500' :
+                item.emotionKey === 'confident' ? 'bg-green-500' :
+                item.emotionKey === 'calm' ? 'bg-blue-500' :
                 item.emotionKey === 'neutral' ? 'bg-gray-500' :
-                item.emotionKey === 'bad' ? 'bg-orange-500' :
+                item.emotionKey === 'stressed' ? 'bg-orange-500' :
                 'bg-red-500'
               }`} />
               <span className="font-medium">{item.emotion}</span>
