@@ -8,6 +8,7 @@ import { Upload, FileText, CheckCircle, XCircle, Download } from 'lucide-react'
 import Papa from 'papaparse'
 import { toast } from 'sonner'
 import { useTrades } from '@/lib/hooks/useTrades'
+import type { Trade } from '@/types'
 import { cn } from '@/lib/utils/cn'
 
 interface CsvRow {
@@ -92,7 +93,7 @@ export function CsvImport() {
           continue
         }
 
-        const { error } = await addTrade(tradeData as any)
+        const { error } = await addTrade(tradeData as unknown as Trade)
 
         if (error) {
           failed++

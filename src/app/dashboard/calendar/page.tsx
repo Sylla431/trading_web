@@ -43,7 +43,7 @@ export default function CalendarPage() {
       const { data, error } = await supabase
         .from('calendar_events')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user?.id || '')
         .order('event_date', { ascending: true })
 
       if (error) throw error

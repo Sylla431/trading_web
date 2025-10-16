@@ -26,7 +26,7 @@ export default function ImportPage() {
             <FileSpreadsheet className="w-8 h-8 text-primary mb-2" />
             <CardTitle className="text-lg">Fichier CSV</CardTitle>
             <CardDescription>
-              Importez depuis n'importe quel fichier CSV
+              Importez depuis n&apos;importe quel fichier CSV
             </CardDescription>
           </CardHeader>
         </Card>

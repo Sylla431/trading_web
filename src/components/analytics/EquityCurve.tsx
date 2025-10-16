@@ -101,15 +101,15 @@ export function EquityCurve({ trades, timePeriod = 'month' }: EquityCurveProps) 
         borderColor: isDark ? 'rgba(80, 80, 80, 0.4)' : 'rgba(226, 232, 240, 0.4)',
         borderWidth: 1,
         cornerRadius: 8,
-        callbacks: {
-          title: function(context: any) {
-            const dataIndex = context[0].dataIndex
-            return data[dataIndex]?.fullDate || context[0].label
-          },
-          label: function(context: any) {
-            return `Capital: ${context.parsed.y.toFixed(2)} $`
-          }
-        }
+            callbacks: {
+              title: function(context: { dataIndex: number; label: string }[]) {
+                const dataIndex = context[0].dataIndex
+                return data[dataIndex]?.fullDate || context[0].label
+              },
+              label: function(context: { parsed: { y: number } }) {
+                return `Capital: ${context.parsed.y.toFixed(2)} $`
+              }
+            }
       }
     },
     scales: {

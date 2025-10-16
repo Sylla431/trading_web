@@ -109,20 +109,20 @@ export function PerformanceByStrategy({ trades, timePeriod = 'month' }: Performa
         borderColor: isDark ? 'rgba(80, 80, 80, 0.4)' : 'rgba(226, 232, 240, 0.4)',
         borderWidth: 1,
         cornerRadius: 8,
-        callbacks: {
-          title: function(context: any) {
-            const dataIndex = context[0].dataIndex
-            return `Stratégie: ${chartData.rawData[dataIndex]?.name || context[0].label}`
-          },
-          label: function(context: any) {
-            const dataIndex = context.dataIndex
-            const data = chartData.rawData[dataIndex]
-            return [
-              `Profit: $${context.parsed.x.toFixed(2)}`,
-              `Trades: ${data?.count}`
-            ]
-          }
-        }
+            callbacks: {
+              title: function(context: { dataIndex: number; label: string }[]) {
+                const dataIndex = context[0].dataIndex
+                return `Stratégie: ${chartData.rawData[dataIndex]?.name || context[0].label}`
+              },
+              label: function(context: { dataIndex: number; parsed: { x: number } }) {
+                const dataIndex = context.dataIndex
+                const data = chartData.rawData[dataIndex]
+                return [
+                  `Profit: $${context.parsed.x.toFixed(2)}`,
+                  `Trades: ${data?.count}`
+                ]
+              }
+            }
       }
     },
     scales: {

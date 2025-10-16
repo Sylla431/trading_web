@@ -221,10 +221,10 @@ export default function StrategiesPage() {
                 </div>
 
                 {/* Timeframe */}
-                {strategy.timeframe && (
+                {(strategy as any).timeframe && (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <BarChart3 className="w-3 h-3" />
-                    <span>Timeframe: {strategy.timeframe}</span>
+                    <span>Timeframe: {(strategy as any).timeframe}</span>
                   </div>
                 )}
               </CardContent>

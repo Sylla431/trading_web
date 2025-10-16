@@ -102,21 +102,21 @@ export function ProfitDistribution({ trades, timePeriod = 'month' }: ProfitDistr
         borderColor: 'hsl(var(--border))',
         borderWidth: 1,
         cornerRadius: 6,
-        callbacks: {
-          label: function(context: any): string {
-            const label = context.label || ''
-            const value = context.parsed.y
-            const index = context.dataIndex
-            
-            if (index === 0) {
-              return `${label}: ${value.toFixed(2)} $ (${chartData.tradeCounts.winning} trades gagnants - ${chartData.tradeCounts.losing} trades perdants)`
-            } else if (index === 1) {
-              return `${label}: ${value.toFixed(2)} $ (${chartData.tradeCounts.losing} trades perdants)`
-            } else {
-              return `${label}: 0 $ (${chartData.tradeCounts.breakEven} trades)`
+          callbacks: {
+            label: function(context: { label?: string; parsed: { y: number }; dataIndex: number }): string {
+              const label = context.label || ''
+              const value = context.parsed.y
+              const index = context.dataIndex
+              
+              if (index === 0) {
+                return `${label}: ${value.toFixed(2)} $ (${chartData.tradeCounts.winning} trades gagnants - ${chartData.tradeCounts.losing} trades perdants)`
+              } else if (index === 1) {
+                return `${label}: ${value.toFixed(2)} $ (${chartData.tradeCounts.losing} trades perdants)`
+              } else {
+                return `${label}: 0 $ (${chartData.tradeCounts.breakEven} trades)`
+              }
             }
           }
-        }
       }
     },
     scales: {

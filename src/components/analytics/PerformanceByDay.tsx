@@ -121,11 +121,11 @@ export function PerformanceByDay({ trades, timePeriod = 'month' }: PerformanceBy
         borderWidth: 1,
         cornerRadius: 8,
         callbacks: {
-          title: function(context: any) {
+          title: function(context: { dataIndex: number; label: string }[]) {
             const dataIndex = context[0].dataIndex
             return `Jour: ${chartData.rawData[dataIndex]?.day || context[0].label}`
           },
-          label: function(context: any) {
+          label: function(context: { dataIndex: number; parsed: { y: number } }) {
             const dataIndex = context.dataIndex
             const data = chartData.rawData[dataIndex]
             return [

@@ -53,12 +53,12 @@ export default function PlanPage() {
         supabase
           .from('trading_plans')
           .select('*')
-          .eq('user_id', user?.id)
+          .eq('user_id', user?.id || '')
           .order('created_at', { ascending: false }),
         supabase
           .from('goals')
           .select('*')
-          .eq('user_id', user?.id)
+          .eq('user_id', user?.id || '')
           .eq('status', 'active')
           .order('end_date', { ascending: true }),
       ])

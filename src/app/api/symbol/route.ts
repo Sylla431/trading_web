@@ -29,10 +29,10 @@ export async function GET(req: Request) {
     }
 
     const lotFilter = Array.isArray(info.filters)
-      ? info.filters.find((f: any) => f.filterType === 'LOT_SIZE')
+      ? info.filters.find((f: { filterType: string }) => f.filterType === 'LOT_SIZE')
       : undefined
     const priceFilter = Array.isArray(info.filters)
-      ? info.filters.find((f: any) => f.filterType === 'PRICE_FILTER')
+      ? info.filters.find((f: { filterType: string }) => f.filterType === 'PRICE_FILTER')
       : undefined
 
     const minQty = lotFilter?.minQty ? Number(lotFilter.minQty) : undefined
