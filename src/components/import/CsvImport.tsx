@@ -4,11 +4,10 @@ import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Upload, FileText, CheckCircle, XCircle, Download } from 'lucide-react'
+import { Upload, FileText, CheckCircle, Download } from 'lucide-react'
 import Papa from 'papaparse'
 import { toast } from 'sonner'
 import { useTrades } from '@/lib/hooks/useTrades'
-import type { Trade } from '@/types'
 import { cn } from '@/lib/utils/cn'
 
 interface CsvRow {
@@ -45,14 +44,9 @@ export function CsvImport() {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
-      complete: (results) => {
-        setData(results.data as CsvRow[])
+      complete: (results: Papa.ParseResult<CsvRow>) => {
+        setData(results.data)
         toast.success(`${results.data.length} lignes détectées dans le fichier`)
-      },
-      error: (error) => {
-        toast.error('Erreur lors de la lecture du fichier', {
-          description: error.message,
-        })
       },
     })
   }
@@ -71,8 +65,8 @@ export function CsvImport() {
         const tradeData = {
           symbol: row.Symbol || row.symbol || row.SYMBOL,
           trade_type: (row.Type || row.type || row.TYPE || '').toLowerCase().includes('buy')
-            ? 'long'
-            : 'short',
+            ? 'long' as const
+            : 'short' as const,
           lot_size: parseFloat(row.Lots || row.lots || row.LOTS || row.Volume || '0'),
           entry_price: parseFloat(row.OpenPrice || row['Open Price'] || row.open_price || '0'),
           exit_price: parseFloat(row.ClosePrice || row['Close Price'] || row.close_price || '0'),
@@ -83,7 +77,7 @@ export function CsvImport() {
           commission: parseFloat(row.Commission || row.commission || '0') || 0,
           swap: parseFloat(row.Swap || row.swap || '0') || 0,
           net_profit: parseFloat(row.Profit || row.profit || row.PL || '0'),
-          status: row.CloseTime || row.exit_time ? 'closed' : 'open',
+          status: row.CloseTime || row.exit_time ? 'closed' as const : 'open' as const,
           imported_from: 'csv',
         }
 
@@ -93,14 +87,14 @@ export function CsvImport() {
           continue
         }
 
-        const { error } = await addTrade(tradeData as unknown as Trade)
+        const { error } = await addTrade(tradeData)
 
         if (error) {
           failed++
         } else {
           success++
         }
-      } catch (error) {
+      } catch {
         failed++
       }
     }
