@@ -69,6 +69,7 @@ export interface Strategy {
   risk_management_rules?: string
   total_trades: number
   winning_trades: number
+  timeframe?: string
   losing_trades: number
   win_rate?: number
   average_profit?: number
