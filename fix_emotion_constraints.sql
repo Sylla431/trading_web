@@ -75,3 +75,4 @@ SELECT
 FROM trades 
 WHERE emotion_after IS NOT NULL 
   AND emotion_after NOT IN ('confident', 'calm', 'neutral', 'stressed', 'fearful', 'euphoric', 'frustrated', 'relieved');
+

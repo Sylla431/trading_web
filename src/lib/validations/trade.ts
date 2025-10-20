@@ -1,21 +1,17 @@
 import { z } from 'zod'
 import type { EmotionBeforeType, EmotionAfterType } from '@/types'
 
-const optionalPositiveNumber = z
-  .preprocess((v) => {
-    if (v === '' || v === null || v === undefined) return undefined
-    const n = typeof v === 'string' ? Number(v) : (v as number)
-    return Number.isNaN(n) ? undefined : n
-  }, z.number().positive())
-  .optional()
+const optionalPositiveNumber = z.preprocess((v) => {
+  if (v === '' || v === null || v === undefined) return undefined
+  const n = typeof v === 'string' ? Number(v) : (v as number)
+  return Number.isNaN(n) ? undefined : n
+}, z.union([z.undefined(), z.number().positive()]))
 
-const optionalNumber = z
-  .preprocess((v) => {
-    if (v === '' || v === null || v === undefined) return undefined
-    const n = typeof v === 'string' ? Number(v) : (v as number)
-    return Number.isNaN(n) ? undefined : n
-  }, z.number())
-  .optional()
+const optionalNumber = z.preprocess((v) => {
+  if (v === '' || v === null || v === undefined) return undefined
+  const n = typeof v === 'string' ? Number(v) : (v as number)
+  return Number.isNaN(n) ? undefined : n
+}, z.union([z.undefined(), z.number()]))
 
 export const tradeSchema = z
   .object({
@@ -27,7 +23,7 @@ export const tradeSchema = z
     order_type: z.enum(['market', 'limit', 'stop', 'stop_limit']).optional(),
     lot_size: z.number().positive('La taille du lot doit être positive'),
     position_size: z.number().positive().optional(),
-    entry_price: z.number().positive('Le prix d\'entrée doit être positif'),
+    entry_price: optionalPositiveNumber,
     exit_price: optionalPositiveNumber,
     stop_loss: optionalPositiveNumber,
     take_profit: optionalPositiveNumber,
@@ -56,14 +52,8 @@ export const tradeSchema = z
     status: z.enum(['open', 'closed', 'cancelled']).default('open'),
   })
   .superRefine((data, ctx) => {
+    // Validation supprimée pour exit_price car le champ n'est plus disponible dans l'interface
     if (data.status === 'closed') {
-      if (data.exit_price === undefined || data.exit_price === null) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['exit_price'],
-          message: 'Requis si statut = Fermé',
-        })
-      }
       if (!data.exit_time) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,

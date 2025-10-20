@@ -50,3 +50,4 @@ export function translateEmotion(emotion: string | undefined): string {
   // Si aucune traduction trouvée, retourner l'émotion originale
   return emotion
 }
+

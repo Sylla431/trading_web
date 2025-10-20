@@ -37,3 +37,4 @@ WHERE
   (emotion_before IS NOT NULL AND emotion_before NOT IN ('confident', 'calm', 'neutral', 'stressed', 'fearful'))
   OR 
   (emotion_after IS NOT NULL AND emotion_after NOT IN ('confident', 'calm', 'neutral', 'stressed', 'fearful', 'euphoric', 'frustrated', 'relieved'));
+

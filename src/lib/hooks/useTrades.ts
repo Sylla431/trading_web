@@ -157,6 +157,12 @@ export function useTrades(accountId?: string) {
       console.log('🔄 updateTrade appelé', { id, updates })
       // Normaliser potentiellement les dates si fournies et ajuster status
       const normalized: Record<string, unknown> = { ...updates }
+      
+      // Exclure entry_price et exit_price des mises à jour car ces champs ne sont plus dans l'interface
+      // et peuvent causer des problèmes de contraintes NOT NULL en base
+      delete normalized.entry_price
+      delete normalized.exit_price
+      
       if (typeof updates.entry_time === 'string') normalized.entry_time = toIsoIfProvided(updates.entry_time)
       if (typeof updates.exit_time === 'string') normalized.exit_time = toIsoIfProvided(updates.exit_time)
 

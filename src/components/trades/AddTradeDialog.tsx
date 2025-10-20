@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/dist/style.css'
 import { useForm } from 'react-hook-form'
@@ -16,7 +16,7 @@ import { useAccounts } from '@/lib/hooks/useAccounts'
 import { useStrategies } from '@/lib/hooks/useStrategies'
 import { StrategyPlanPanel } from '@/components/trades/StrategyPlanPanel'
 import { X } from 'lucide-react'
-import type { Trade } from '@/types'
+import type { Trade, EmotionBeforeType, EmotionAfterType } from '@/types'
 
 interface AddTradeDialogProps {
   onClose: () => void
@@ -56,11 +56,68 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
   })
 
   const watchedEntryTime = watch('entry_time') as string | undefined
-  const watchedExitPrice = watch('exit_price') as number | undefined
   const watchedStrategyName = watch('strategy_name') as string | undefined
   
-  // Trouver la stratégie sélectionnée
-  const selectedStrategy = strategies.find((s) => s.name === watchedStrategyName) || null
+  // Trouver la stratégie sélectionnée (mémorisé pour éviter les recalculs)
+  const selectedStrategy = useMemo(() => 
+    strategies.find((s) => s.name === watchedStrategyName) || null,
+    [strategies, watchedStrategyName]
+  )
+
+  // Configuration des émotions pour éviter la duplication
+  const emotionBeforeOptions = [
+    { value: 'confident', label: 'Confiant', icon: '😎', color: 'text-green-600' },
+    { value: 'calm', label: 'Calme', icon: '😌', color: 'text-blue-500' },
+    { value: 'neutral', label: 'Neutre', icon: '😐', color: 'text-gray-500' },
+    { value: 'stressed', label: 'Stressé', icon: '😰', color: 'text-orange-500' },
+    { value: 'fearful', label: 'Peur', icon: '😨', color: 'text-red-600' },
+  ] as const
+
+  const emotionAfterOptions = [
+    { value: 'euphoric', label: 'Euphorique', icon: '🚀', color: 'text-green-600' },
+    { value: 'confident', label: 'Confiant', icon: '😎', color: 'text-green-500' },
+    { value: 'relieved', label: 'Soulagé', icon: '😌', color: 'text-blue-500' },
+    { value: 'neutral', label: 'Neutre', icon: '😐', color: 'text-gray-500' },
+    { value: 'frustrated', label: 'Frustré', icon: '😤', color: 'text-orange-500' },
+    { value: 'stressed', label: 'Stressé', icon: '😰', color: 'text-orange-600' },
+    { value: 'fearful', label: 'Peur', icon: '😨', color: 'text-red-500' },
+    { value: 'calm', label: 'Calme', icon: '🧘', color: 'text-blue-600' },
+  ] as const
+
+  // Composant réutilisable pour la sélection d'émotions
+  const EmotionSelector = ({ 
+    options, 
+    currentValue, 
+    onSelect, 
+    fieldName,
+    columns = 4
+  }: {
+    options: readonly { value: string; label: string; icon: string; color: string }[]
+    currentValue: string | undefined
+    onSelect: (value: string) => void
+    fieldName: string
+    columns?: number
+  }) => (
+    <div className={`grid gap-2 ${columns === 5 ? 'grid-cols-5' : 'grid-cols-4'}`}>
+      {options.map((mood) => (
+        <button
+          key={mood.value}
+          type="button"
+          onClick={() => onSelect(mood.value)}
+          className={`p-2 rounded-lg border-2 transition-all ${
+            currentValue === mood.value
+              ? 'border-primary bg-primary/10'
+              : 'border-border hover:border-primary/50'
+          }`}
+          aria-pressed={currentValue === mood.value}
+          aria-label={`${fieldName}: ${mood.label}`}
+        >
+          <div className="text-lg mb-1">{mood.icon}</div>
+          <div className={`text-xs font-medium ${mood.color}`}>{mood.label}</div>
+        </button>
+      ))}
+    </div>
+  )
 
   const formatNowForInput = useCallback(() => {
     const d = new Date()
@@ -85,10 +142,10 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
   }
 
   // Fonction pour convertir les anciennes valeurs d'émotion vers les nouvelles
-  const convertEmotion = (emotion: string | undefined): 'confident' | 'calm' | 'neutral' | 'stressed' | 'fearful' | undefined => {
+  const convertEmotion = (emotion: string | undefined): EmotionBeforeType | undefined => {
     if (!emotion) return undefined
     
-    const emotionMap: Record<string, 'confident' | 'calm' | 'neutral' | 'stressed' | 'fearful'> = {
+    const emotionMap: Record<string, EmotionBeforeType> = {
       'excellent': 'confident',
       'good': 'calm',
       'neutral': 'neutral',
@@ -104,22 +161,46 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
     return emotionMap[emotion] || undefined
   }
 
+  // Fonction pour convertir les émotions après trade (inclut les valeurs supplémentaires)
+  const convertEmotionAfter = (emotion: string | undefined): EmotionAfterType | undefined => {
+    if (!emotion) return undefined
+    
+    const emotionMap: Record<string, EmotionAfterType> = {
+      'excellent': 'confident',
+      'good': 'calm',
+      'neutral': 'neutral',
+      'bad': 'stressed',
+      'terrible': 'fearful',
+      // Nouvelles valeurs
+      'confident': 'confident',
+      'calm': 'calm',
+      'stressed': 'stressed',
+      'fearful': 'fearful',
+      'euphoric': 'euphoric',
+      'frustrated': 'frustrated',
+      'relieved': 'relieved'
+    }
+    
+    return emotionMap[emotion] || undefined
+  }
+
   useEffect(() => {
     if (tradeToEdit) {
+      if (process.env.NODE_ENV === 'development') {
       console.log('🔄 Remplissage du formulaire avec:', {
         emotion_before: tradeToEdit.emotion_before,
         emotion_after: tradeToEdit.emotion_after,
         emotion_before_type: typeof tradeToEdit.emotion_before,
         emotion_after_type: typeof tradeToEdit.emotion_after
       })
+      }
       
       reset({
         account_id: (tradeToEdit as unknown as { account_id?: string }).account_id,
         symbol: tradeToEdit.symbol,
         trade_type: tradeToEdit.trade_type,
         lot_size: tradeToEdit.lot_size,
-        entry_price: tradeToEdit.entry_price,
-        exit_price: tradeToEdit.exit_price,
+        // entry_price et exit_price supprimés car les champs n'existent plus dans l'interface
         stop_loss: tradeToEdit.stop_loss,
         take_profit: tradeToEdit.take_profit,
         entry_time: tradeToEdit.entry_time?.slice(0, 16),
@@ -129,7 +210,7 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
         strategy_name: tradeToEdit.strategy_name,
         status: tradeToEdit.status,
         emotion_before: convertEmotion(tradeToEdit.emotion_before),
-        emotion_after: convertEmotion(tradeToEdit.emotion_after),
+        emotion_after: convertEmotionAfter(tradeToEdit.emotion_after),
         discipline_score: tradeToEdit.discipline_score,
       })
     } else if (tradeToDuplicate) {
@@ -139,8 +220,7 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
         symbol: tradeToDuplicate.symbol,
         trade_type: tradeToDuplicate.trade_type,
         lot_size: tradeToDuplicate.lot_size,
-        entry_price: tradeToDuplicate.entry_price,
-        exit_price: undefined, // Reset exit price
+        // entry_price et exit_price supprimés car les champs n'existent plus dans l'interface
         stop_loss: tradeToDuplicate.stop_loss,
         take_profit: tradeToDuplicate.take_profit,
         entry_time: formatNowForInput(), // Set entry time to now
@@ -151,43 +231,46 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
         strategy_name: tradeToDuplicate.strategy_name,
         status: 'open', // Set status to open
         emotion_before: convertEmotion(tradeToDuplicate.emotion_before),
-        emotion_after: convertEmotion(tradeToDuplicate.emotion_after),
+        emotion_after: convertEmotionAfter(tradeToDuplicate.emotion_after),
         discipline_score: tradeToDuplicate.discipline_score,
       })
     }
   }, [tradeToEdit, tradeToDuplicate, reset, formatNowForInput])
 
-  // UX: si un prix de sortie est saisi, on bascule automatiquement en "Fermé"
-  // et on préremplit la date de sortie à maintenant si absente
-  useEffect(() => {
-    if (watchedExitPrice && watchedExitPrice > 0) {
-      setValue('status', 'closed', { shouldDirty: true })
-      if (!watch('exit_time')) {
-        setValue('exit_time', formatNowForInput(), { shouldDirty: true })
-      }
-    }
-  }, [watchedExitPrice, setValue, watch, formatNowForInput])
+  // Logique supprimée : le prix de sortie n'est plus utilisé pour changer automatiquement le statut
 
-  // Debug: afficher les erreurs de validation
+  // Debug: afficher les erreurs de validation (en développement uniquement)
+  if (process.env.NODE_ENV === 'development') {
   console.log('🔍 Erreurs de validation:', errors)
   console.log('✅ Formulaire valide:', isValid)
+  }
 
   const onSubmit = async (data: TradeFormData) => {
+    if (process.env.NODE_ENV === 'development') {
     console.log('🚀 onSubmit appelé', { isEdit, tradeToEdit: tradeToEdit?.id, data })
+    }
     setIsSubmitting(true)
     try {
       let error: Error | null = null
       
       if (isEdit && tradeToEdit) {
+        if (process.env.NODE_ENV === 'development') {
         console.log('📝 Mode édition - Mise à jour du trade', tradeToEdit.id)
+        }
         const { error: updateErr } = await updateTrade(tradeToEdit.id, data)
         error = updateErr ?? null
+        if (process.env.NODE_ENV === 'development') {
         console.log('✅ Résultat mise à jour:', { error })
+        }
       } else {
+        if (process.env.NODE_ENV === 'development') {
         console.log('➕ Mode ajout - Nouveau trade')
+        }
         const { error: addErr } = await addTrade(data)
         error = addErr ?? null
+        if (process.env.NODE_ENV === 'development') {
         console.log('✅ Résultat ajout:', { error })
+        }
       }
 
       if (error) {
@@ -196,7 +279,9 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
           description: error.message,
         })
       } else {
+        if (process.env.NODE_ENV === 'development') {
         console.log('🎉 Succès:', isEdit ? 'Trade mis à jour' : 'Trade ajouté')
+        }
         toast.success(isEdit ? 'Trade mis à jour !' : 'Trade ajouté avec succès !')
         onClose()
       }
@@ -209,16 +294,22 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 overflow-hidden">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 overflow-hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="dialog-title"
+      aria-describedby="dialog-description"
+    >
       <div className="w-full max-w-7xl h-[90vh] gap-6" style={{ display: 'grid', gridTemplateColumns: '1fr 400px', minWidth: '800px' }}>
         {/* Formulaire principal */}
         <Card className="flex flex-col overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between flex-shrink-0 border-b">
             <div>
-              <CardTitle>
+              <CardTitle id="dialog-title">
                 {isEdit ? 'Éditer un trade' : isDuplicate ? 'Dupliquer un trade' : 'Ajouter un trade'}
               </CardTitle>
-              <CardDescription>
+              <CardDescription id="dialog-description">
                 {isEdit
                   ? 'Modifiez les détails de votre trade'
                   : isDuplicate
@@ -233,9 +324,10 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
           <CardContent className="flex-1 overflow-y-auto">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Sélection du compte */}
-            {accounts.length > 0 && (
               <div className="space-y-2">
-                <Label htmlFor="account_id">Compte de trading</Label>
+              <Label htmlFor="account_id">Compte de trading *</Label>
+              {accounts.length > 0 ? (
+                <>
                 <select
                   id="account_id"
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
@@ -248,8 +340,26 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
                     </option>
                   ))}
                 </select>
+                  {errors.account_id && (
+                    <p className="text-sm text-destructive">{errors.account_id.message}</p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <select
+                    id="account_id"
+                    className="flex h-9 w-full rounded-md border border-red-300 bg-transparent px-3 py-1 text-sm shadow-sm"
+                    disabled
+                    {...register('account_id')}
+                  >
+                    <option value="">Aucun compte disponible</option>
+                  </select>
+                  <p className="text-sm text-destructive">
+                    Vous devez créer un compte de trading avant d&apos;ajouter un trade.
+                  </p>
+                </>
+              )}
               </div>
-            )}
 
             {/* Informations de base */}
             <div className="grid grid-cols-2 gap-4">
@@ -278,8 +388,7 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
               </div>
             </div>
 
-            {/* Prix et taille */}
-            <div className="grid grid-cols-3 gap-4">
+            {/* Taille du lot */}
               <div className="space-y-2">
                 <Label htmlFor="lot_size">Taille du lot *</Label>
                 <Input
@@ -292,37 +401,6 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
                 {errors.lot_size && (
                   <p className="text-sm text-destructive">{errors.lot_size.message}</p>
                 )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="entry_price">Prix d&apos;entrée *</Label>
-                <Input
-                  id="entry_price"
-                  type="number"
-                  step="any"
-                  placeholder="1.2500"
-                  {...register('entry_price', { valueAsNumber: true })}
-                />
-                {errors.entry_price && (
-                  <p className="text-sm text-destructive">{errors.entry_price.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="exit_price">Prix de sortie</Label>
-                <Input
-                  id="exit_price"
-                  type="number"
-                  step="any"
-                  placeholder="1.2600"
-                  {...register('exit_price', {
-                    setValueAs: (v) => (v === '' ? undefined : Number(v))
-                  })}
-                />
-                {errors.exit_price && (
-                  <p className="text-sm text-destructive">{errors.exit_price.message}</p>
-                )}
-              </div>
             </div>
 
             {/* SL/TP */}
@@ -501,59 +579,24 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
               
               <div className="space-y-3">
                 <Label>Humeur avant le trade</Label>
-                <div className="grid grid-cols-5 gap-2">
-                  {[
-                    { value: 'confident', label: 'Confiant', icon: '😎', color: 'text-green-600' },
-                    { value: 'calm', label: 'Calme', icon: '😌', color: 'text-blue-500' },
-                    { value: 'neutral', label: 'Neutre', icon: '😐', color: 'text-gray-500' },
-                    { value: 'stressed', label: 'Stressé', icon: '😰', color: 'text-orange-500' },
-                    { value: 'fearful', label: 'Peur', icon: '😨', color: 'text-red-600' },
-                  ].map((mood) => (
-                    <button
-                      key={mood.value}
-                      type="button"
-                      onClick={() => setValue('emotion_before', mood.value as 'confident' | 'calm' | 'neutral' | 'stressed' | 'fearful', { shouldDirty: true })}
-                      className={`p-2 rounded-lg border-2 transition-all ${
-                        watch('emotion_before') === mood.value
-                          ? 'border-primary bg-primary/10'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                    >
-                      <div className="text-lg mb-1">{mood.icon}</div>
-                      <div className={`text-xs font-medium ${mood.color}`}>{mood.label}</div>
-                    </button>
-                  ))}
-                </div>
+                <EmotionSelector
+                  options={emotionBeforeOptions}
+                  currentValue={watch('emotion_before')}
+                  onSelect={(value) => setValue('emotion_before', value as EmotionBeforeType, { shouldDirty: true })}
+                  fieldName="Humeur avant le trade"
+                  columns={5}
+                />
               </div>
 
               <div className="space-y-3">
                 <Label>Humeur après le trade</Label>
-                <div className="grid grid-cols-4 gap-2">
-                  {[
-                    { value: 'euphoric', label: 'Euphorique', icon: '🚀', color: 'text-green-600' },
-                    { value: 'confident', label: 'Confiant', icon: '😎', color: 'text-green-500' },
-                    { value: 'relieved', label: 'Soulagé', icon: '😌', color: 'text-blue-500' },
-                    { value: 'neutral', label: 'Neutre', icon: '😐', color: 'text-gray-500' },
-                    { value: 'frustrated', label: 'Frustré', icon: '😤', color: 'text-orange-500' },
-                    { value: 'stressed', label: 'Stressé', icon: '😰', color: 'text-orange-600' },
-                    { value: 'fearful', label: 'Peur', icon: '😨', color: 'text-red-500' },
-                    { value: 'calm', label: 'Calme', icon: '🧘', color: 'text-blue-600' },
-                  ].map((mood) => (
-                    <button
-                      key={mood.value}
-                      type="button"
-                      onClick={() => setValue('emotion_after', mood.value as 'confident' | 'calm' | 'neutral' | 'stressed' | 'fearful' | 'euphoric' | 'frustrated' | 'relieved', { shouldDirty: true })}
-                      className={`p-2 rounded-lg border-2 transition-all ${
-                        watch('emotion_after') === mood.value
-                          ? 'border-primary bg-primary/10'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                    >
-                      <div className="text-lg mb-1">{mood.icon}</div>
-                      <div className={`text-xs font-medium ${mood.color}`}>{mood.label}</div>
-                    </button>
-                  ))}
-                </div>
+                <EmotionSelector
+                  options={emotionAfterOptions}
+                  currentValue={watch('emotion_after')}
+                  onSelect={(value) => setValue('emotion_after', value as EmotionAfterType, { shouldDirty: true })}
+                  fieldName="Humeur après le trade"
+                  columns={4}
+                />
               </div>
 
               <div className="space-y-2">
@@ -638,9 +681,6 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
               <Button 
                 type="submit" 
                 disabled={isSubmitting}
-                onClick={() => {
-                  console.log('🖱️ Bouton cliqué!', { isEdit, isValid, errors })
-                }}
               >
                 {isSubmitting 
                   ? (isEdit ? 'Mise à jour...' : 'Ajout en cours...') 

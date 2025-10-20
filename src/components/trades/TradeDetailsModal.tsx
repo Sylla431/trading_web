@@ -90,7 +90,9 @@ export function TradeDetailsModal({ trade, onClose, onEdit, onDuplicate }: Trade
             </div>
             <div className="p-4 rounded-xl bg-secondary/30">
               <p className="text-xs text-muted-foreground mb-1">Entrée</p>
-              <p className="text-lg font-bold">{trade.entry_price.toFixed(5)}</p>
+              <p className="text-lg font-bold">
+                {trade.entry_price ? trade.entry_price.toFixed(5) : 'N/A'}
+              </p>
             </div>
             <div className="p-4 rounded-xl bg-secondary/30">
               <p className="text-xs text-muted-foreground mb-1">Sortie</p>
