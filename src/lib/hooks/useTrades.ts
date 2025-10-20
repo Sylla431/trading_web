@@ -103,11 +103,12 @@ export function useTrades(accountId?: string) {
           ).data as { broker?: string } | null
         : null
 
-      const payload = {
+      // Préparer le payload en s'assurant que les champs NOT NULL ont des valeurs
+      const payload: Record<string, unknown> = {
         user_id: user?.id,
         account_id: (tradeData as { account_id?: string }).account_id,
         symbol: tradeData.symbol,
-        broker: selectedAccount?.broker || undefined,
+        broker: selectedAccount?.broker,
         account_number: tradeData.account_number,
         trade_type: tradeData.trade_type,
         order_type: tradeData.order_type,
@@ -136,9 +137,14 @@ export function useTrades(accountId?: string) {
         net_profit,
       }
 
+      // Nettoyer le payload pour enlever les valeurs undefined mais garder les null
+      const cleanPayload = Object.fromEntries(
+        Object.entries(payload).filter(([, value]) => value !== undefined)
+      )
+
       const { data, error: insertError } = await supabase
         .from('trades')
-        .insert([payload] as never)
+        .insert([cleanPayload] as never)
         .select()
         .single()
 
@@ -159,7 +165,6 @@ export function useTrades(accountId?: string) {
       const normalized: Record<string, unknown> = { ...updates }
       
       // Exclure entry_price et exit_price des mises à jour car ces champs ne sont plus dans l'interface
-      // et peuvent causer des problèmes de contraintes NOT NULL en base
       delete normalized.entry_price
       delete normalized.exit_price
       
