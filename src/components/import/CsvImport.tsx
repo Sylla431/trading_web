@@ -82,7 +82,8 @@ export function CsvImport() {
         }
 
         // Validation basique
-        if (!tradeData.symbol || !tradeData.entry_price || tradeData.lot_size <= 0) {
+        // Note: entry_price peut maintenant être 0 (valeur par défaut)
+        if (!tradeData.symbol || tradeData.lot_size <= 0) {
           failed++
           continue
         }

@@ -20,6 +20,14 @@ export function TradeDetailsModal({ trade, onClose, onEdit, onDuplicate }: Trade
   const isProfit = (trade.net_profit ?? 0) >= 0
   const isProfitCalculated = trade.net_profit !== null && trade.net_profit !== undefined
 
+  // Fonction pour formater les prix avec gestion des valeurs non définies
+  const formatPrice = (price: number | null | undefined) => {
+    if (!price || price === 0) {
+      return 'Non défini'
+    }
+    return price.toFixed(5)
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto border-2 border-primary/50">
@@ -90,39 +98,39 @@ export function TradeDetailsModal({ trade, onClose, onEdit, onDuplicate }: Trade
             </div>
             <div className="p-4 rounded-xl bg-secondary/30">
               <p className="text-xs text-muted-foreground mb-1">Entrée</p>
-              <p className="text-lg font-bold">{trade.entry_price.toFixed(5)}</p>
+              <p className="text-lg font-bold">{formatPrice(trade.entry_price)}</p>
             </div>
             <div className="p-4 rounded-xl bg-secondary/30">
               <p className="text-xs text-muted-foreground mb-1">Sortie</p>
               <p className="text-lg font-bold">
-                {trade.exit_price ? trade.exit_price.toFixed(5) : '-'}
+                {formatPrice(trade.exit_price)}
               </p>
             </div>
           </div>
 
           {/* SL/TP */}
-          {(trade.stop_loss || trade.take_profit) && (
+          {(trade.stop_loss && trade.stop_loss > 0) || (trade.take_profit && trade.take_profit > 0) ? (
             <div className="grid grid-cols-2 gap-4">
-              {trade.stop_loss && (
+              {trade.stop_loss && trade.stop_loss > 0 && (
                 <div className="p-4 rounded-xl loss-bg border loss-border">
                   <p className="text-xs loss-text mb-2 flex items-center gap-1">
                     <Target className="w-3 h-3" />
                     Stop Loss
                   </p>
-                  <p className="text-xl font-bold">{trade.stop_loss.toFixed(5)}</p>
+                  <p className="text-xl font-bold">{formatPrice(trade.stop_loss)}</p>
                 </div>
               )}
-              {trade.take_profit && (
+              {trade.take_profit && trade.take_profit > 0 && (
                 <div className="p-4 rounded-xl profit-bg border profit-border">
                   <p className="text-xs profit-text mb-2 flex items-center gap-1">
                     <Target className="w-3 h-3" />
                     Take Profit
                   </p>
-                  <p className="text-xl font-bold">{trade.take_profit.toFixed(5)}</p>
+                  <p className="text-xl font-bold">{formatPrice(trade.take_profit)}</p>
                 </div>
               )}
             </div>
-          )}
+          ) : null}
 
           {/* Dates */}
           <div className="p-4 rounded-xl bg-secondary/30 space-y-3">

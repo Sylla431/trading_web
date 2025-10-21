@@ -52,6 +52,8 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
       commission: 0,
       swap: 0,
       discipline_score: 5,
+      entry_price: 0,
+      exit_price: 0,
     },
   })
 
@@ -118,8 +120,8 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
         symbol: tradeToEdit.symbol,
         trade_type: tradeToEdit.trade_type,
         lot_size: tradeToEdit.lot_size,
-        entry_price: tradeToEdit.entry_price,
-        exit_price: tradeToEdit.exit_price,
+        entry_price: tradeToEdit.entry_price ?? 0,
+        exit_price: tradeToEdit.exit_price ?? 0,
         stop_loss: tradeToEdit.stop_loss,
         take_profit: tradeToEdit.take_profit,
         entry_time: tradeToEdit.entry_time?.slice(0, 16),
@@ -139,8 +141,8 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
         symbol: tradeToDuplicate.symbol,
         trade_type: tradeToDuplicate.trade_type,
         lot_size: tradeToDuplicate.lot_size,
-        entry_price: tradeToDuplicate.entry_price,
-        exit_price: undefined, // Reset exit price
+        entry_price: 0, // Reset entry price to 0
+        exit_price: 0, // Reset exit price to 0
         stop_loss: tradeToDuplicate.stop_loss,
         take_profit: tradeToDuplicate.take_profit,
         entry_time: formatNowForInput(), // Set entry time to now
@@ -157,8 +159,9 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
     }
   }, [tradeToEdit, tradeToDuplicate, reset, formatNowForInput])
 
-  // UX: si un prix de sortie est saisi, on bascule automatiquement en "Fermé"
+  // UX: si un prix de sortie est saisi et supérieur à 0, on bascule automatiquement en "Fermé"
   // et on préremplit la date de sortie à maintenant si absente
+  // Note: Les prix sont maintenant masqués et ont une valeur par défaut de 0
   useEffect(() => {
     if (watchedExitPrice && watchedExitPrice > 0) {
       setValue('status', 'closed', { shouldDirty: true })
@@ -279,7 +282,7 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
             </div>
 
             {/* Prix et taille */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="lot_size">Taille du lot *</Label>
                 <Input
@@ -294,35 +297,21 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="entry_price">Prix d&apos;entrée *</Label>
-                <Input
-                  id="entry_price"
-                  type="number"
-                  step="any"
-                  placeholder="1.2500"
-                  {...register('entry_price', { valueAsNumber: true })}
-                />
-                {errors.entry_price && (
-                  <p className="text-sm text-destructive">{errors.entry_price.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="exit_price">Prix de sortie</Label>
-                <Input
-                  id="exit_price"
-                  type="number"
-                  step="any"
-                  placeholder="1.2600"
-                  {...register('exit_price', {
-                    setValueAs: (v) => (v === '' ? undefined : Number(v))
-                  })}
-                />
-                {errors.exit_price && (
-                  <p className="text-sm text-destructive">{errors.exit_price.message}</p>
-                )}
-              </div>
+              {/* Champs entry_price et exit_price masqués - valeurs par défaut 0 */}
+              <input
+                type="hidden"
+                {...register('entry_price', { 
+                  valueAsNumber: true,
+                  setValueAs: (v) => v === '' ? 0 : Number(v) || 0
+                })}
+              />
+              <input
+                type="hidden"
+                {...register('exit_price', { 
+                  valueAsNumber: true,
+                  setValueAs: (v) => v === '' ? 0 : Number(v) || 0
+                })}
+              />
             </div>
 
             {/* SL/TP */}

@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { TrendingUp, TrendingDown, Trash2, Eye, Calendar } from 'lucide-react'
@@ -18,6 +17,14 @@ interface TradeCardProps {
 export function TradeCard({ trade, onDetails, onDelete }: TradeCardProps) {
   const isProfit = (trade.net_profit ?? 0) >= 0
   const isProfitCalculated = trade.net_profit !== null && trade.net_profit !== undefined
+
+  // Fonction pour formater les prix avec gestion des valeurs non définies
+  const formatPrice = (price: number | null | undefined) => {
+    if (!price || price === 0) {
+      return 'Non défini'
+    }
+    return price.toFixed(5)
+  }
 
   return (
     <Card className="group hover:scale-[1.02] transition-all duration-300 border-2 border-border/50 hover:border-primary/50 relative overflow-hidden">
@@ -63,7 +70,7 @@ export function TradeCard({ trade, onDetails, onDelete }: TradeCardProps) {
           </div>
           <div>
             <span className="text-muted-foreground">Entrée: </span>
-            <span className="font-medium">{trade.entry_price.toFixed(5)}</span>
+            <span className="font-medium">{formatPrice(trade.entry_price)}</span>
           </div>
         </div>
 

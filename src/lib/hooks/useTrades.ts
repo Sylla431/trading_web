@@ -69,8 +69,9 @@ export function useTrades(accountId?: string) {
   }
 
   const determineStatus = (data: { exit_price?: number; exit_time?: string; status?: Trade['status'] }): Trade['status'] => {
-    // Si un prix de sortie est fourni, on considère le trade comme fermé
-    if (data.exit_price !== undefined) return 'closed'
+    // Si un prix de sortie est fourni ET supérieur à 0, on considère le trade comme fermé
+    // (car exit_price a maintenant une valeur par défaut de 0)
+    if (data.exit_price !== undefined && data.exit_price > 0) return 'closed'
     return data.status ?? 'open'
   }
 

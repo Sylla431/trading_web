@@ -30,9 +30,9 @@ export function RiskRewardAnalysis({ trades, timePeriod = 'month' }: RiskRewardA
       .filter((t) => {
         return (
           t.status === 'closed' &&
-          t.entry_price &&
-          t.exit_price &&
-          t.stop_loss &&
+          t.entry_price && t.entry_price > 0 &&
+          t.exit_price && t.exit_price > 0 &&
+          t.stop_loss && t.stop_loss > 0 &&
           t.net_profit !== undefined &&
           t.net_profit !== null
         )

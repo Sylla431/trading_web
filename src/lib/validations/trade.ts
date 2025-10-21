@@ -9,6 +9,14 @@ const optionalPositiveNumber = z
   }, z.number().positive())
   .optional()
 
+const optionalPriceNumber = z
+  .preprocess((v) => {
+    if (v === '' || v === null || v === undefined) return 0
+    const n = typeof v === 'string' ? Number(v) : (v as number)
+    return Number.isNaN(n) ? 0 : n
+  }, z.number().min(0))
+  .default(0)
+
 const optionalNumber = z
   .preprocess((v) => {
     if (v === '' || v === null || v === undefined) return undefined
@@ -27,8 +35,8 @@ export const tradeSchema = z
     order_type: z.enum(['market', 'limit', 'stop', 'stop_limit']).optional(),
     lot_size: z.number().positive('La taille du lot doit être positive'),
     position_size: z.number().positive().optional(),
-    entry_price: z.number().positive('Le prix d\'entrée doit être positif'),
-    exit_price: optionalPositiveNumber,
+    entry_price: optionalPriceNumber,
+    exit_price: optionalPriceNumber,
     stop_loss: optionalPositiveNumber,
     take_profit: optionalPositiveNumber,
     entry_time: z.string().min(1, 'La date d\'entrée est requise'),
@@ -57,13 +65,7 @@ export const tradeSchema = z
   })
   .superRefine((data, ctx) => {
     if (data.status === 'closed') {
-      if (data.exit_price === undefined || data.exit_price === null) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['exit_price'],
-          message: 'Requis si statut = Fermé',
-        })
-      }
+      // Plus de validation sur exit_price car il est maintenant optionnel avec valeur par défaut 0
       if (!data.exit_time) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
