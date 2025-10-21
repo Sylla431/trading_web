@@ -76,11 +76,7 @@ export function CsvImport() {
           take_profit: parseFloat(row.TakeProfit || row['Take Profit'] || row.TP || '0') || undefined,
           commission: parseFloat(row.Commission || row.commission || '0') || 0,
           swap: parseFloat(row.Swap || row.swap || '0') || 0,
-          gross_profit: undefined, // Propriété optionnelle manquante
           net_profit: parseFloat(row.Profit || row.profit || row.PL || '0'),
-          pips: undefined, // Propriété optionnelle manquante
-          points: undefined, // Propriété optionnelle manquante
-          discipline_score: undefined, // Propriété optionnelle manquante
           status: row.CloseTime || row.exit_time ? 'closed' as const : 'open' as const,
           imported_from: 'csv',
         }

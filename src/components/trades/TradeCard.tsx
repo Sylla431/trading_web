@@ -63,9 +63,7 @@ export function TradeCard({ trade, onDetails, onDelete }: TradeCardProps) {
           </div>
           <div>
             <span className="text-muted-foreground">Entrée: </span>
-            <span className="font-medium">
-              {trade.entry_price ? trade.entry_price.toFixed(5) : 'N/A'}
-            </span>
+            <span className="font-medium">{trade.entry_price.toFixed(5)}</span>
           </div>
         </div>
 

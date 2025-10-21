@@ -103,12 +103,11 @@ export function useTrades(accountId?: string) {
           ).data as { broker?: string } | null
         : null
 
-      // Préparer le payload en s'assurant que les champs NOT NULL ont des valeurs
-      const payload: Record<string, unknown> = {
+      const payload = {
         user_id: user?.id,
         account_id: (tradeData as { account_id?: string }).account_id,
         symbol: tradeData.symbol,
-        broker: selectedAccount?.broker,
+        broker: selectedAccount?.broker || undefined,
         account_number: tradeData.account_number,
         trade_type: tradeData.trade_type,
         order_type: tradeData.order_type,
@@ -137,14 +136,9 @@ export function useTrades(accountId?: string) {
         net_profit,
       }
 
-      // Nettoyer le payload pour enlever les valeurs undefined mais garder les null
-      const cleanPayload = Object.fromEntries(
-        Object.entries(payload).filter(([, value]) => value !== undefined)
-      )
-
       const { data, error: insertError } = await supabase
         .from('trades')
-        .insert([cleanPayload] as never)
+        .insert([payload] as never)
         .select()
         .single()
 
@@ -163,11 +157,6 @@ export function useTrades(accountId?: string) {
       console.log('🔄 updateTrade appelé', { id, updates })
       // Normaliser potentiellement les dates si fournies et ajuster status
       const normalized: Record<string, unknown> = { ...updates }
-      
-      // Exclure entry_price et exit_price des mises à jour car ces champs ne sont plus dans l'interface
-      delete normalized.entry_price
-      delete normalized.exit_price
-      
       if (typeof updates.entry_time === 'string') normalized.entry_time = toIsoIfProvided(updates.entry_time)
       if (typeof updates.exit_time === 'string') normalized.exit_time = toIsoIfProvided(updates.exit_time)
 
