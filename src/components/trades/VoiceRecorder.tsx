@@ -84,7 +84,7 @@ export function VoiceRecorder({ onRecordingComplete, onClear, disabled = false }
       toast.success('Enregistrement démarré')
     } catch (error) {
       console.error('Erreur accès microphone:', error)
-      toast.error('Impossible d\'accéder au microphone')
+      toast.error('Impossible d&apos;accéder au microphone')
     }
   }, [onRecordingComplete])
 
@@ -270,7 +270,7 @@ export function VoiceRecorder({ onRecordingComplete, onClear, disabled = false }
         {/* Message d'aide */}
         {!audioBlob && !isRecording && (
           <p className="text-xs text-muted-foreground">
-            Cliquez sur "Démarrer l'enregistrement" pour enregistrer une note vocale sur votre analyse.
+            Cliquez sur &quot;Démarrer l&apos;enregistrement&quot; pour enregistrer une note vocale sur votre analyse.
           </p>
         )}
       </CardContent>

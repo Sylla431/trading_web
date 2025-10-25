@@ -101,7 +101,7 @@ export function TradeMediaViewer({ voiceNotes, analysisPhotos, screenshots }: Tr
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
           <Volume2 className="h-5 w-5" />
-          Médias d'analyse
+          Médias d&apos;analyse
           <span className="ml-2 px-2 py-1 text-xs bg-primary text-primary-foreground rounded-full">
             {totalMedia}
           </span>
@@ -121,7 +121,7 @@ export function TradeMediaViewer({ voiceNotes, analysisPhotos, screenshots }: Tr
             </TabsTrigger>
             <TabsTrigger value="photos" className="flex items-center gap-2">
               <ImageIcon className="h-4 w-4" />
-              Photos d'analyse
+              Photos d&apos;analyse
               {safeAnalysisPhotos.length > 0 && (
                 <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
                   {safeAnalysisPhotos.length}
@@ -206,7 +206,7 @@ export function TradeMediaViewer({ voiceNotes, analysisPhotos, screenshots }: Tr
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 <ImageIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">Aucune photo d'analyse</p>
+                <p className="text-sm">Aucune photo d&apos;analyse</p>
               </div>
             )}
           </TabsContent>

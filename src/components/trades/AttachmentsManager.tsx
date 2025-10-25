@@ -158,7 +158,7 @@ export function AttachmentsManager({
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="text-lg">Médias d'analyse</CardTitle>
+        <CardTitle className="text-lg">Médias d&apos;analyse</CardTitle>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="voice" className="w-full">
@@ -174,7 +174,7 @@ export function AttachmentsManager({
             </TabsTrigger>
             <TabsTrigger value="photos" className="flex items-center gap-2">
               <ImageIcon className="h-4 w-4" />
-              Photos d'analyse
+              Photos d&apos;analyse
               {(activeAnalysisPhotos.length + newPhotoFiles.length) > 0 && (
                 <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
                   {activeAnalysisPhotos.length + newPhotoFiles.length}
@@ -268,7 +268,7 @@ export function AttachmentsManager({
                       <div className="aspect-square rounded-lg overflow-hidden border bg-muted/30">
                         <img
                           src={url}
-                          alt={`Photo d'analyse ${index + 1}`}
+                          alt={`Photo d&apos;analyse ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
                       </div>

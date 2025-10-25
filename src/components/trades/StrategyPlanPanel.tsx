@@ -91,7 +91,7 @@ export function StrategyPlanPanel({ strategy, onDisciplineScoreChange }: Strateg
           )}
         </CardTitle>
         <CardDescription>
-          {strategy.description || 'Cochez chaque règle avant d\'entrer en position'}
+          {strategy.description || 'Cochez chaque règle avant d&apos;entrer en position'}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">

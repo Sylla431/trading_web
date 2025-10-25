@@ -55,7 +55,7 @@ export function AudioPlayer({ filePath, onPlay, onPause, onEnded, getFileUrl }: 
       onPause={onPause}
       onEnded={onEnded}
     >
-      Votre navigateur ne supporte pas l'élément audio.
+      Votre navigateur ne supporte pas l&apos;élément audio.
     </audio>
   )
 }

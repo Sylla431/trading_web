@@ -223,7 +223,7 @@ export function PhotoUploader({
       <CardContent className="p-4 space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold">
-            Photos d'analyse {multiple ? '(multiple)' : '(simple)'}
+            Photos d&apos;analyse {multiple ? '(multiple)' : '(simple)'}
           </h3>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>Max {maxSize}MB par image</span>
@@ -375,7 +375,7 @@ export function PhotoUploader({
         {/* Message d'aide */}
         {selectedFiles.length === 0 && (
           <p className="text-xs text-muted-foreground">
-            Ajoutez {multiple ? 'des photos' : 'une photo'} d'analyse pour enrichir vos notes de trade.
+            Ajoutez {multiple ? 'des photos' : 'une photo'} d&apos;analyse pour enrichir vos notes de trade.
           </p>
         )}
       </CardContent>

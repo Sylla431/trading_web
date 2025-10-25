@@ -276,7 +276,7 @@ export function AudioUploader({
         {/* Message d'aide */}
         {!selectedFile && (
           <p className="text-xs text-muted-foreground">
-            Sélectionnez un fichier audio existant pour l'ajouter à votre analyse.
+            Sélectionnez un fichier audio existant pour l&apos;ajouter à votre analyse.
           </p>
         )}
       </CardContent>
