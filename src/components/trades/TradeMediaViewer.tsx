@@ -130,7 +130,7 @@ export function TradeMediaViewer({ voiceNotes, analysisPhotos, screenshots }: Tr
             </TabsTrigger>
             <TabsTrigger value="screenshots" className="flex items-center gap-2">
               <ImageIcon className="h-4 w-4" />
-              Captures d'écran
+              Captures d&apos;écran
               {safeScreenshots.length > 0 && (
                 <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
                   {safeScreenshots.length}
@@ -230,7 +230,7 @@ export function TradeMediaViewer({ voiceNotes, analysisPhotos, screenshots }: Tr
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 <ImageIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">Aucune capture d'écran</p>
+                <p className="text-sm">Aucune capture d&apos;écran</p>
               </div>
             )}
           </TabsContent>

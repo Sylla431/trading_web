@@ -189,7 +189,7 @@ export function VoiceRecorder({ onRecordingComplete, onClear, disabled = false }
               variant="default"
             >
               <Mic className="h-4 w-4" />
-              Démarrer l'enregistrement
+              Démarrer l&apos;enregistrement
             </Button>
           ) : (
             <Button
@@ -199,7 +199,7 @@ export function VoiceRecorder({ onRecordingComplete, onClear, disabled = false }
               variant="destructive"
             >
               <Square className="h-4 w-4" />
-              Arrêter l'enregistrement
+              Arrêter l&apos;enregistrement
             </Button>
           )}
         </div>
