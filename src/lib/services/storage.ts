@@ -266,8 +266,7 @@ export async function getSignedUrl(filePath: string, expiresIn: number = 3600): 
       console.error('❌ Erreur génération URL signée:', error)
       console.error('❌ Détails erreur:', {
         message: error.message,
-        statusCode: error.statusCode,
-        error: error.error
+        error: error
       })
       return ''
     }
