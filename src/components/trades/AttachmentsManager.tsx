@@ -86,7 +86,7 @@ export function AttachmentsManager({
       if (result.success) {
         setFilesToDelete(prev => ({
           ...prev,
-          [type]: [...prev[type], url]
+          [type]: [...prev[type as keyof typeof prev], url]
         }))
         
         if (type === 'voice') {
