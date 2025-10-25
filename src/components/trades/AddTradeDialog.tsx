@@ -15,8 +15,11 @@ import { useTrades } from '@/lib/hooks/useTrades'
 import { useAccounts } from '@/lib/hooks/useAccounts'
 import { useStrategies } from '@/lib/hooks/useStrategies'
 import { StrategyPlanPanel } from '@/components/trades/StrategyPlanPanel'
+import { AttachmentsManager } from '@/components/trades/AttachmentsManager'
 import { X } from 'lucide-react'
 import type { Trade } from '@/types'
+import { uploadVoiceNote, uploadAnalysisPhoto, deleteFiles } from '@/lib/services/storage'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface AddTradeDialogProps {
   onClose: () => void
@@ -28,7 +31,15 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
   const { addTrade, updateTrade } = useTrades()
   const { accounts } = useAccounts()
   const { strategies } = useStrategies()
+  const { user } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // États pour les médias
+  const [newVoiceFiles, setNewVoiceFiles] = useState<File[]>([])
+  const [newPhotoFiles, setNewPhotoFiles] = useState<File[]>([])
+  const [voiceNotesToDelete, setVoiceNotesToDelete] = useState<string[]>([])
+  const [analysisPhotosToDelete, setAnalysisPhotosToDelete] = useState<string[]>([])
+  const [isUploading, setIsUploading] = useState(false)
   const isEdit = Boolean(tradeToEdit)
   const isDuplicate = Boolean(tradeToDuplicate)
   const [showEntryCal, setShowEntryCal] = useState(false)
@@ -60,6 +71,7 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
   const watchedEntryTime = watch('entry_time') as string | undefined
   const watchedExitPrice = watch('exit_price') as number | undefined
   const watchedStrategyName = watch('strategy_name') as string | undefined
+  const watchedStatus = watch('status') as string | undefined
   
   // Trouver la stratégie sélectionnée
   const selectedStrategy = strategies.find((s) => s.name === watchedStrategyName) || null
@@ -171,43 +183,148 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
     }
   }, [watchedExitPrice, setValue, watch, formatNowForInput])
 
+  // UX: si le statut est changé manuellement en "closed", préremplir la date de sortie
+  useEffect(() => {
+    if (watchedStatus === 'closed' && !watch('exit_time')) {
+      setValue('exit_time', formatNowForInput(), { shouldDirty: true })
+    }
+  }, [watchedStatus, setValue, watch, formatNowForInput])
+
   // Debug: afficher les erreurs de validation
   console.log('🔍 Erreurs de validation:', errors)
   console.log('✅ Formulaire valide:', isValid)
 
+  // Fonction pour uploader les médias
+  const uploadMediaFiles = async (tradeId: string): Promise<{ voiceUrls: string[], photoUrls: string[] }> => {
+    if (!user) throw new Error('Utilisateur non connecté')
+    
+    const voiceUrls: string[] = []
+    const photoUrls: string[] = []
+    
+    console.log('📤 Upload des médias pour trade:', tradeId, {
+      newVoiceFiles: newVoiceFiles.length,
+      newPhotoFiles: newPhotoFiles.length
+    })
+    
+    // Upload des fichiers audio
+    for (const file of newVoiceFiles) {
+      console.log('🎵 Upload fichier audio:', file.name)
+      const result = await uploadVoiceNote(file, user.id, tradeId)
+      if (result.error) {
+        throw new Error(`Erreur upload audio: ${result.error}`)
+      }
+      console.log('✅ Audio uploadé:', result.url)
+      voiceUrls.push(result.url)
+    }
+    
+    // Upload des fichiers photo
+    for (const file of newPhotoFiles) {
+      console.log('📸 Upload fichier photo:', file.name)
+      const result = await uploadAnalysisPhoto(file, user.id, tradeId)
+      if (result.error) {
+        throw new Error(`Erreur upload photo: ${result.error}`)
+      }
+      console.log('✅ Photo uploadée:', result.url)
+      photoUrls.push(result.url)
+    }
+    
+    console.log('🎉 Tous les médias uploadés:', { voiceUrls, photoUrls })
+    return { voiceUrls, photoUrls }
+  }
+
   const onSubmit = async (data: TradeFormData) => {
     console.log('🚀 onSubmit appelé', { isEdit, tradeToEdit: tradeToEdit?.id, data })
+    console.log('📊 Données du formulaire complètes:', JSON.stringify(data, null, 2))
+    console.log('💰 Profit net dans le formulaire:', { 
+      net_profit: data.net_profit, 
+      type: typeof data.net_profit,
+      original: tradeToEdit?.net_profit 
+    })
     setIsSubmitting(true)
+    setIsUploading(true)
+    
     try {
-      let error: Error | null = null
+      let tradeId = tradeToEdit?.id || ''
       
-      if (isEdit && tradeToEdit) {
-        console.log('📝 Mode édition - Mise à jour du trade', tradeToEdit.id)
-        const { error: updateErr } = await updateTrade(tradeToEdit.id, data)
-        error = updateErr ?? null
-        console.log('✅ Résultat mise à jour:', { error })
-      } else {
+      // 1. Créer le trade si nouveau
+      if (!isEdit) {
         console.log('➕ Mode ajout - Nouveau trade')
-        const { error: addErr } = await addTrade(data)
-        error = addErr ?? null
-        console.log('✅ Résultat ajout:', { error })
+        const { data: newTrade, error: addErr } = await addTrade(data) as { data: Trade | null; error: Error | null }
+        
+        if (addErr) {
+          throw addErr
+        }
+        
+        tradeId = newTrade?.id || ''
+        console.log('✅ Trade ajouté avec ID:', tradeId)
+      }
+      
+      // 2. Upload des médias si présents
+      if (newVoiceFiles.length > 0 || newPhotoFiles.length > 0) {
+        console.log('📤 Upload des médias...')
+        try {
+          const { voiceUrls, photoUrls } = await uploadMediaFiles(tradeId)
+          
+          // Mettre à jour les données avec les URLs des médias
+          const existingVoiceNotes = (tradeToEdit?.voice_notes || []).filter(url => !voiceNotesToDelete.includes(url))
+          const existingAnalysisPhotos = (tradeToEdit?.analysis_photos || []).filter(url => !analysisPhotosToDelete.includes(url))
+          
+          data.voice_notes = [...existingVoiceNotes, ...voiceUrls]
+          data.analysis_photos = [...existingAnalysisPhotos, ...photoUrls]
+          
+          console.log('✅ Médias uploadés:', { voiceUrls, photoUrls })
+          console.log('📊 Données finales avec médias:', { 
+            voice_notes: data.voice_notes, 
+            analysis_photos: data.analysis_photos 
+          })
+        } catch (uploadError) {
+          console.error('❌ Erreur lors de l\'upload des médias:', uploadError)
+          throw uploadError
+        }
+      }
+      
+      // 3. Mettre à jour le trade (édition ou après création)
+      if (isEdit && tradeToEdit) {
+        console.log('📝 Mise à jour du trade existant')
+        const { error: updateErr } = await updateTrade(tradeToEdit.id, data)
+        if (updateErr) {
+          console.error('❌ Erreur mise à jour trade:', updateErr)
+          throw updateErr
+        }
+        console.log('✅ Trade existant mis à jour avec succès')
+      } else if (!isEdit && tradeId) {
+        // Mettre à jour le nouveau trade avec les médias
+        console.log('📝 Mise à jour du nouveau trade avec les médias')
+        const { error: updateErr } = await updateTrade(tradeId, data)
+        if (updateErr) {
+          console.error('❌ Erreur mise à jour nouveau trade:', updateErr)
+          throw updateErr
+        }
+        console.log('✅ Nouveau trade mis à jour avec succès')
+      }
+      
+      // 4. Supprimer les fichiers marqués pour suppression
+      if (voiceNotesToDelete.length > 0 || analysisPhotosToDelete.length > 0) {
+        console.log('🗑️ Suppression des fichiers...')
+        const filesToDelete = [...voiceNotesToDelete, ...analysisPhotosToDelete]
+        const deleteResult = await deleteFiles(filesToDelete)
+        if (!deleteResult.success) {
+          console.warn('⚠️ Erreur suppression fichiers:', deleteResult.error)
+        }
       }
 
-      if (error) {
-        console.error('❌ Erreur lors de l\'enregistrement:', error)
-        toast.error('Erreur lors de l\'enregistrement', {
-          description: error.message,
-        })
-      } else {
-        console.log('🎉 Succès:', isEdit ? 'Trade mis à jour' : 'Trade ajouté')
-        toast.success(isEdit ? 'Trade mis à jour !' : 'Trade ajouté avec succès !')
-        onClose()
-      }
+      console.log('🎉 Succès:', isEdit ? 'Trade mis à jour' : 'Trade ajouté')
+      toast.success(isEdit ? 'Trade mis à jour !' : 'Trade ajouté avec succès !')
+      onClose()
+      
     } catch (err) {
       console.error('💥 Erreur catch:', err)
-      toast.error('Une erreur est survenue')
+      toast.error('Une erreur est survenue', {
+        description: err instanceof Error ? err.message : 'Erreur inconnue'
+      })
     } finally {
       setIsSubmitting(false)
+      setIsUploading(false)
     }
   }
 
@@ -366,7 +483,13 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
                 step="0.01"
                 placeholder="100.00"
                 {...register('net_profit', {
-                  setValueAs: (v) => (v === '' || v === null ? undefined : Number(v))
+                  setValueAs: (v) => {
+                    console.log('🔄 setValueAs net_profit:', { v, type: typeof v })
+                    if (v === '' || v === null || v === undefined) return undefined
+                    const num = Number(v)
+                    console.log('🔄 Conversion net_profit:', { v, num, isNaN: Number.isNaN(num) })
+                    return Number.isNaN(num) ? undefined : num
+                  }
                 })}
               />
               <p className="text-xs text-muted-foreground">
@@ -602,6 +725,21 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
               />
             </div>
 
+            {/* Médias d'analyse */}
+            {user && (
+              <AttachmentsManager
+                existingVoiceNotes={tradeToEdit?.voice_notes}
+                existingAnalysisPhotos={tradeToEdit?.analysis_photos}
+                onVoiceNotesChange={setNewVoiceFiles}
+                onAnalysisPhotosChange={setNewPhotoFiles}
+                onVoiceNotesDelete={setVoiceNotesToDelete}
+                onAnalysisPhotosDelete={setAnalysisPhotosToDelete}
+                disabled={isSubmitting || isUploading}
+                userId={user.id}
+                tradeId={tradeToEdit?.id || 'temp'}
+              />
+            )}
+
             {/* Plan de stratégie - Version mobile */}
             <div className="hidden">
               <div className="space-y-2">
@@ -626,14 +764,16 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
               </Button>
               <Button 
                 type="submit" 
-                disabled={isSubmitting}
+                disabled={isSubmitting || isUploading}
                 onClick={() => {
                   console.log('🖱️ Bouton cliqué!', { isEdit, isValid, errors })
                 }}
               >
-                {isSubmitting 
-                  ? (isEdit ? 'Mise à jour...' : 'Ajout en cours...') 
-                  : (isEdit ? 'Mettre à jour le trade' : 'Ajouter le trade')
+                {isUploading 
+                  ? 'Upload des médias...'
+                  : isSubmitting 
+                    ? (isEdit ? 'Mise à jour...' : 'Ajout en cours...') 
+                    : (isEdit ? 'Mettre à jour le trade' : 'Ajouter le trade')
                 }
               </Button>
             </div>
@@ -651,7 +791,12 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-1 overflow-y-auto">
-            <StrategyPlanPanel strategy={selectedStrategy} />
+            <StrategyPlanPanel 
+              strategy={selectedStrategy}
+              onDisciplineScoreChange={(score) => {
+                setValue('discipline_score', score, { shouldDirty: true })
+              }}
+            />
           </CardContent>
         </Card>
       </div>

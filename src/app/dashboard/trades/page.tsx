@@ -317,7 +317,7 @@ export default function TradesPage() {
       {/* Modals */}
       {selectedTrade && !showAddDialog && (
         <TradeDetailsModal
-          trade={selectedTrade}
+          trade={trades.find(t => t.id === selectedTrade.id) || selectedTrade}
           onClose={() => setSelectedTrade(null)}
           onEdit={(t) => {
             setShowAddDialog(true)
@@ -337,6 +337,8 @@ export default function TradesPage() {
             setShowAddDialog(false)
             setSelectedTrade(null)
             setTradeToDuplicate(null)
+            // Rafraîchir les trades après modification
+            fetchTrades()
           }}
           tradeToEdit={selectedTrade || undefined}
           tradeToDuplicate={tradeToDuplicate || undefined}

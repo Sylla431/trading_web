@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { TrendingUp, TrendingDown, Trash2, Eye, Calendar } from 'lucide-react'
+import { TrendingUp, TrendingDown, Trash2, Eye, Calendar, FileAudio, Image as ImageIcon } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import type { Trade } from '@/types'
@@ -25,6 +25,9 @@ export function TradeCard({ trade, onDetails, onDelete }: TradeCardProps) {
     }
     return price.toFixed(5)
   }
+
+  // Compter les médias (gérer les valeurs null)
+  const mediaCount = (trade.voice_notes?.length || 0) + (trade.analysis_photos?.length || 0) + (trade.screenshots?.length || 0)
 
   return (
     <Card className="group hover:scale-[1.02] transition-all duration-300 border-2 border-border/50 hover:border-primary/50 relative overflow-hidden">
@@ -74,17 +77,31 @@ export function TradeCard({ trade, onDetails, onDelete }: TradeCardProps) {
           </div>
         </div>
 
-        {/* Date et stratégie */}
+        {/* Date, stratégie et médias */}
         <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
           <div className="flex items-center gap-1">
             <Calendar className="w-3 h-3" />
             {format(new Date(trade.entry_time), 'dd MMM yyyy', { locale: fr })}
           </div>
-          {trade.strategy_name && (
-            <span className="px-2 py-0.5 rounded bg-primary/10 text-primary font-medium">
-              {trade.strategy_name}
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {/* Indicateur de médias */}
+            {mediaCount > 0 && (
+              <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-secondary/50 text-muted-foreground">
+                {trade.voice_notes && trade.voice_notes.length > 0 && (
+                  <FileAudio className="w-3 h-3" />
+                )}
+                {((trade.analysis_photos && trade.analysis_photos.length > 0) || (trade.screenshots && trade.screenshots.length > 0)) && (
+                  <ImageIcon className="w-3 h-3" />
+                )}
+                <span className="text-xs">{mediaCount}</span>
+              </div>
+            )}
+            {trade.strategy_name && (
+              <span className="px-2 py-0.5 rounded bg-primary/10 text-primary font-medium">
+                {trade.strategy_name}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Actions compactes */}

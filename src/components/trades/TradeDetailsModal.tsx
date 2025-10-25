@@ -8,6 +8,7 @@ import { fr } from 'date-fns/locale'
 import type { Trade } from '@/types'
 import { cn } from '@/lib/utils/cn'
 import { translateEmotionBefore, translateEmotionAfter } from '@/lib/utils/emotionTranslations'
+import { TradeMediaViewer } from './TradeMediaViewer'
 
 interface TradeDetailsModalProps {
   trade: Trade
@@ -17,6 +18,14 @@ interface TradeDetailsModalProps {
 }
 
 export function TradeDetailsModal({ trade, onClose, onEdit, onDuplicate }: TradeDetailsModalProps) {
+  // Debug: afficher les données du trade
+  console.log('🔍 TradeDetailsModal - Données du trade:', {
+    id: trade.id,
+    voice_notes: trade.voice_notes,
+    analysis_photos: trade.analysis_photos,
+    screenshots: trade.screenshots
+  })
+  
   const isProfit = (trade.net_profit ?? 0) >= 0
   const isProfitCalculated = trade.net_profit !== null && trade.net_profit !== undefined
 
@@ -229,6 +238,13 @@ export function TradeDetailsModal({ trade, onClose, onEdit, onDuplicate }: Trade
               <p className="text-sm">{trade.lesson_learned}</p>
             </div>
           )}
+
+          {/* Médias d'analyse */}
+          <TradeMediaViewer
+            voiceNotes={trade.voice_notes}
+            analysisPhotos={trade.analysis_photos}
+            screenshots={trade.screenshots}
+          />
 
           {/* Actions */}
           <div className="flex gap-3 pt-4 border-t border-border/50">

@@ -61,6 +61,8 @@ export const tradeSchema = z
       message: 'Doit être entre 1 et 10',
     }),
     screenshots: z.array(z.string()).optional(),
+    voice_notes: z.array(z.string()).optional(),
+    analysis_photos: z.array(z.string()).optional(),
     status: z.enum(['open', 'closed', 'cancelled']).default('open'),
   })
   .superRefine((data, ctx) => {

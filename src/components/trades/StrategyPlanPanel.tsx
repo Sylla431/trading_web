@@ -7,15 +7,34 @@ import type { Strategy } from '@/types'
 
 interface StrategyPlanPanelProps {
   strategy: Strategy | null
+  onDisciplineScoreChange?: (score: number) => void
 }
 
-export function StrategyPlanPanel({ strategy }: StrategyPlanPanelProps) {
+export function StrategyPlanPanel({ strategy, onDisciplineScoreChange }: StrategyPlanPanelProps) {
   const [checkedRules, setCheckedRules] = useState<Set<string>>(new Set())
+
+  // Calculer les règles et le score (avant le return conditionnel)
+  const entryRules = strategy?.entry_rules?.split('\n').filter((r) => r.trim()) || []
+  const exitRules = strategy?.exit_rules?.split('\n').filter((r) => r.trim()) || []
+  const riskRules = strategy?.risk_management_rules?.split('\n').filter((r) => r.trim()) || []
+  
+  const totalRules = entryRules.length + exitRules.length + riskRules.length
+  const checkedCount = checkedRules.size
+  const allChecked = totalRules > 0 && checkedCount === totalRules
 
   // Réinitialiser les checkboxes quand la stratégie change
   useEffect(() => {
     setCheckedRules(new Set())
   }, [strategy?.id])
+
+  // Calculer et communiquer le score de discipline
+  useEffect(() => {
+    if (totalRules > 0 && onDisciplineScoreChange) {
+      const score = Math.round((checkedCount / totalRules) * 10)
+      onDisciplineScoreChange(score)
+    }
+  }, [checkedRules, totalRules, checkedCount, onDisciplineScoreChange])
+
   const toggleRule = (ruleId: string) => {
     setCheckedRules((prev) => {
       const newSet = new Set(prev)
@@ -53,14 +72,6 @@ export function StrategyPlanPanel({ strategy }: StrategyPlanPanelProps) {
       </Card>
     )
   }
-
-  const entryRules = strategy.entry_rules?.split('\n').filter((r) => r.trim()) || []
-  const exitRules = strategy.exit_rules?.split('\n').filter((r) => r.trim()) || []
-  const riskRules = strategy.risk_management_rules?.split('\n').filter((r) => r.trim()) || []
-  
-  const totalRules = entryRules.length + exitRules.length + riskRules.length
-  const checkedCount = checkedRules.size
-  const allChecked = totalRules > 0 && checkedCount === totalRules
 
   return (
     <Card className={`h-full border-2 ${allChecked ? 'border-green-500/50' : 'border-primary/20'}`}>
@@ -179,6 +190,24 @@ export function StrategyPlanPanel({ strategy }: StrategyPlanPanelProps) {
                   </button>
                 )
               })}
+            </div>
+          </div>
+        )}
+
+        {/* Score de discipline */}
+        {totalRules > 0 && (
+          <div className="mt-4 p-3 bg-primary/10 rounded-lg">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Score de discipline</span>
+              <span className="text-2xl font-bold text-primary">
+                {Math.round((checkedCount / totalRules) * 10)}/10
+              </span>
+            </div>
+            <div className="mt-2 h-2 bg-secondary rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all"
+                style={{ width: `${(checkedCount / totalRules) * 100}%` }}
+              />
             </div>
           </div>
         )}

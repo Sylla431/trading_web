@@ -112,6 +112,8 @@ export interface Database {
           emotion_after: string | null
           discipline_score: number | null
           screenshots: string[] | null
+          voice_notes: string[] | null
+          analysis_photos: string[] | null
           status: 'open' | 'closed' | 'cancelled'
           imported_from: string | null
           external_id: string | null
@@ -155,6 +157,8 @@ export interface Database {
           emotion_after?: string | null
           discipline_score?: number | null
           screenshots?: string[] | null
+          voice_notes?: string[] | null
+          analysis_photos?: string[] | null
           status?: 'open' | 'closed' | 'cancelled'
           imported_from?: string | null
           external_id?: string | null
@@ -198,6 +202,8 @@ export interface Database {
           emotion_after?: string | null
           discipline_score?: number | null
           screenshots?: string[] | null
+          voice_notes?: string[] | null
+          analysis_photos?: string[] | null
           status?: 'open' | 'closed' | 'cancelled'
           imported_from?: string | null
           external_id?: string | null

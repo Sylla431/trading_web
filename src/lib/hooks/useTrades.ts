@@ -49,6 +49,17 @@ export function useTrades(accountId?: string) {
   // Récupère la taille de contrat pour un symbole; fallback sensé pour forex si inconnu
   const getContractSizeForSymbol = async (symbol: string | undefined): Promise<number> => {
     if (!symbol) return 100000 // fallback forex standard
+    
+    // Heuristique: crypto/indices => 1, sinon forex => 100000
+    const upper = symbol.toUpperCase()
+    const isCryptoOrIndex = upper.includes('BTC') || upper.includes('ETH') || upper.includes('SPX') || upper.includes('NAS')
+    
+    // Pour l'instant, on utilise directement l'heuristique sans requête DB
+    // car la table instruments peut ne pas exister ou avoir des problèmes de permissions
+    return isCryptoOrIndex ? 1 : 100000
+    
+    /* 
+    // Code original commenté en cas de problème avec la table instruments
     try {
       const { data } = await supabase
         .from('instruments')
@@ -59,13 +70,11 @@ export function useTrades(accountId?: string) {
       if (typeof contractSize === 'number' && !Number.isNaN(contractSize)) {
         return contractSize
       }
-    } catch {
+    } catch (error) {
+      console.warn('Erreur lors de la récupération de la taille de contrat:', error)
       // Ignore et utilise le fallback
     }
-    // Heuristique: crypto/indices => 1, sinon forex => 100000
-    const upper = symbol.toUpperCase()
-    const isCryptoOrIndex = upper.includes('BTC') || upper.includes('ETH') || upper.includes('SPX') || upper.includes('NAS')
-    return isCryptoOrIndex ? 1 : 100000
+    */
   }
 
   const determineStatus = (data: { exit_price?: number; exit_time?: string; status?: Trade['status'] }): Trade['status'] => {
@@ -132,6 +141,8 @@ export function useTrades(accountId?: string) {
         emotion_after: tradeData.emotion_after,
         discipline_score: tradeData.discipline_score,
         screenshots: tradeData.screenshots,
+        voice_notes: tradeData.voice_notes,
+        analysis_photos: tradeData.analysis_photos,
         status,
         gross_profit,
         net_profit,
@@ -156,6 +167,7 @@ export function useTrades(accountId?: string) {
   const updateTrade = async (id: string, updates: Partial<Trade>) => {
     try {
       console.log('🔄 updateTrade appelé', { id, updates })
+      console.log('📊 Données reçues pour mise à jour:', JSON.stringify(updates, null, 2))
       // Normaliser potentiellement les dates si fournies et ajuster status
       const normalized: Record<string, unknown> = { ...updates }
       if (typeof updates.entry_time === 'string') normalized.entry_time = toIsoIfProvided(updates.entry_time)
@@ -181,9 +193,24 @@ export function useTrades(accountId?: string) {
       // Respecte les profits fournis; aucun calcul côté client
       const providedGrossUpdate = (updates as { gross_profit?: number }).gross_profit
       const providedNetUpdate = (updates as { net_profit?: number }).net_profit
+      console.log('💰 Traitement des profits:', { 
+        providedGrossUpdate, 
+        providedNetUpdate,
+        grossType: typeof providedGrossUpdate,
+        netType: typeof providedNetUpdate
+      })
       if (providedGrossUpdate !== undefined) normalized.gross_profit = providedGrossUpdate
       if (providedNetUpdate !== undefined) normalized.net_profit = providedNetUpdate
       // Pas de fallback si non fournis
+
+      console.log('📤 Données normalisées envoyées à Supabase:', JSON.stringify(normalized, null, 2))
+
+      console.log('🔍 Paramètres de la requête:', { 
+        id, 
+        userId: user?.id, 
+        normalizedKeys: Object.keys(normalized),
+        normalizedValues: Object.values(normalized)
+      })
 
       const { data, error: updateError } = await supabase
         .from('trades')
@@ -193,7 +220,18 @@ export function useTrades(accountId?: string) {
         .select()
         .single()
 
-      if (updateError) throw updateError
+      console.log('📊 Résultat de la requête:', { data, updateError })
+
+      if (updateError) {
+        console.error('❌ Erreur Supabase updateTrade:', updateError)
+        console.error('❌ Détails de l\'erreur:', {
+          message: updateError.message,
+          details: updateError.details,
+          hint: updateError.hint,
+          code: updateError.code
+        })
+        throw updateError
+      }
 
       console.log('✅ Trade mis à jour avec succès:', data)
       setTrades(trades.map((t) => (t.id === id ? (data as Trade) : t)))

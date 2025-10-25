@@ -52,6 +52,8 @@ export interface Trade {
   emotion_after?: EmotionAfterType
   discipline_score?: number
   screenshots?: string[]
+  voice_notes?: string[]
+  analysis_photos?: string[]
   created_at: string
   updated_at: string
 }
