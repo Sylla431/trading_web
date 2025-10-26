@@ -63,6 +63,7 @@ export function CsvImport() {
         // Mapper les colonnes CSV vers le format de trade
         // Ajustez les noms de colonnes selon votre format CSV
         const tradeData = {
+          account_id: '', // Required field - will be set by the form or default account
           symbol: row.Symbol || row.symbol || row.SYMBOL,
           trade_type: (row.Type || row.type || row.TYPE || '').toLowerCase().includes('buy')
             ? 'long' as const
