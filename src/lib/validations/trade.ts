@@ -27,7 +27,7 @@ const optionalNumber = z
 
 export const tradeSchema = z
   .object({
-    account_id: z.string().optional(),
+    account_id: z.string().min(1, 'Le compte est requis'),
     symbol: z.string().min(1, 'Le symbole est requis'),
     broker: z.string().optional(),
     account_number: z.string().optional(),
@@ -60,6 +60,7 @@ export const tradeSchema = z
     discipline_score: optionalNumber.refine((v) => v === undefined || (v >= 1 && v <= 10), {
       message: 'Doit être entre 1 et 10',
     }),
+    checked_rules: z.array(z.string()).optional(),
     screenshots: z.array(z.string()).optional(),
     voice_notes: z.array(z.string()).optional(),
     analysis_photos: z.array(z.string()).optional(),

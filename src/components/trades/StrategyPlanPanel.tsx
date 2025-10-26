@@ -8,9 +8,18 @@ import type { Strategy } from '@/types'
 interface StrategyPlanPanelProps {
   strategy: Strategy | null
   onDisciplineScoreChange?: (score: number) => void
+  onCheckedRulesChange?: (rules: string[]) => void
+  initialDisciplineScore?: number
+  initialCheckedRules?: string[]
 }
 
-export function StrategyPlanPanel({ strategy, onDisciplineScoreChange }: StrategyPlanPanelProps) {
+export function StrategyPlanPanel({ 
+  strategy, 
+  onDisciplineScoreChange, 
+  onCheckedRulesChange,
+  initialDisciplineScore, 
+  initialCheckedRules 
+}: StrategyPlanPanelProps) {
   const [checkedRules, setCheckedRules] = useState<Set<string>>(new Set())
 
   // Calculer les règles et le score (avant le return conditionnel)
@@ -22,10 +31,23 @@ export function StrategyPlanPanel({ strategy, onDisciplineScoreChange }: Strateg
   const checkedCount = checkedRules.size
   const allChecked = totalRules > 0 && checkedCount === totalRules
 
-  // Réinitialiser les checkboxes quand la stratégie change
+  // Initialiser les checkboxes avec les valeurs existantes ou réinitialiser
   useEffect(() => {
-    setCheckedRules(new Set())
-  }, [strategy?.id])
+    if (initialCheckedRules && initialCheckedRules.length > 0) {
+      // Mode édition : utiliser les règles déjà cochées
+      setCheckedRules(new Set(initialCheckedRules))
+    } else {
+      // Mode création : réinitialiser
+      setCheckedRules(new Set())
+    }
+  }, [strategy?.id, initialCheckedRules])
+
+  // Initialiser le score de discipline en mode édition
+  useEffect(() => {
+    if (initialDisciplineScore && onDisciplineScoreChange) {
+      onDisciplineScoreChange(initialDisciplineScore)
+    }
+  }, [initialDisciplineScore, onDisciplineScoreChange])
 
   // Calculer et communiquer le score de discipline
   useEffect(() => {
@@ -34,6 +56,13 @@ export function StrategyPlanPanel({ strategy, onDisciplineScoreChange }: Strateg
       onDisciplineScoreChange(score)
     }
   }, [checkedRules, totalRules, checkedCount, onDisciplineScoreChange])
+
+  // Communiquer les règles cochées
+  useEffect(() => {
+    if (onCheckedRulesChange) {
+      onCheckedRulesChange(Array.from(checkedRules))
+    }
+  }, [checkedRules, onCheckedRulesChange])
 
   const toggleRule = (ruleId: string) => {
     setCheckedRules((prev) => {

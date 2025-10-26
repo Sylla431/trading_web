@@ -94,6 +94,11 @@ export function useTrades(accountId?: string) {
 
   const addTrade = async (tradeData: TradeFormData) => {
     try {
+      // Validation des champs requis
+      if (!tradeData.account_id || tradeData.account_id.trim() === '') {
+        throw new Error('Le compte de trading est requis')
+      }
+      
       // Normaliser dates et calculer champs dérivés
       const contractSize = await getContractSizeForSymbol(tradeData.symbol)
       const positionSize = tradeData.position_size ?? (typeof tradeData.lot_size === 'number' ? Number(tradeData.lot_size) * contractSize : undefined)
@@ -140,6 +145,7 @@ export function useTrades(accountId?: string) {
         emotion_before: tradeData.emotion_before,
         emotion_after: tradeData.emotion_after,
         discipline_score: tradeData.discipline_score,
+        checked_rules: tradeData.checked_rules,
         screenshots: tradeData.screenshots,
         voice_notes: tradeData.voice_notes,
         analysis_photos: tradeData.analysis_photos,

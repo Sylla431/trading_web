@@ -111,6 +111,7 @@ export interface Database {
           emotion_before: string | null
           emotion_after: string | null
           discipline_score: number | null
+          checked_rules: string[] | null
           screenshots: string[] | null
           voice_notes: string[] | null
           analysis_photos: string[] | null
@@ -156,6 +157,7 @@ export interface Database {
           emotion_before?: string | null
           emotion_after?: string | null
           discipline_score?: number | null
+          checked_rules?: string[] | null
           screenshots?: string[] | null
           voice_notes?: string[] | null
           analysis_photos?: string[] | null
@@ -201,6 +203,7 @@ export interface Database {
           emotion_before?: string | null
           emotion_after?: string | null
           discipline_score?: number | null
+          checked_rules?: string[] | null
           screenshots?: string[] | null
           voice_notes?: string[] | null
           analysis_photos?: string[] | null

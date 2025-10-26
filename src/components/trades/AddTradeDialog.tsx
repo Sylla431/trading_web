@@ -40,6 +40,8 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
   const [voiceNotesToDelete, setVoiceNotesToDelete] = useState<string[]>([])
   const [analysisPhotosToDelete, setAnalysisPhotosToDelete] = useState<string[]>([])
   const [isUploading, setIsUploading] = useState(false)
+  const [voiceRecordingEnabled, setVoiceRecordingEnabled] = useState(true)
+  const [checkedRules, setCheckedRules] = useState<string[]>([])
   const isEdit = Boolean(tradeToEdit)
   const isDuplicate = Boolean(tradeToDuplicate)
   const [showEntryCal, setShowEntryCal] = useState(false)
@@ -190,6 +192,19 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
     }
   }, [watchedStatus, setValue, watch, formatNowForInput])
 
+  // Lire la préférence d'enregistrement vocal
+  useEffect(() => {
+    const enabled = localStorage.getItem('voice-recording-enabled') === 'true'
+    setVoiceRecordingEnabled(enabled)
+  }, [])
+
+  // Initialiser les règles cochées en mode édition
+  useEffect(() => {
+    if (tradeToEdit?.checked_rules) {
+      setCheckedRules(tradeToEdit.checked_rules)
+    }
+  }, [tradeToEdit?.checked_rules])
+
   // Debug: afficher les erreurs de validation
   console.log('🔍 Erreurs de validation:', errors)
   console.log('✅ Formulaire valide:', isValid)
@@ -259,7 +274,10 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
         console.log('✅ Trade ajouté avec ID:', tradeId)
       }
       
-      // 2. Upload des médias si présents
+      // 2. Préparer les données finales avec les règles cochées
+      data.checked_rules = checkedRules
+      
+      // 3. Upload des médias si présents
       if (newVoiceFiles.length > 0 || newPhotoFiles.length > 0) {
         console.log('📤 Upload des médias...')
         try {
@@ -281,6 +299,13 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
           console.error('❌ Erreur lors de l\'upload des médias:', uploadError)
           throw uploadError
         }
+      } else {
+        // Pas de nouveaux médias, mais on garde les existants
+        const existingVoiceNotes = (tradeToEdit?.voice_notes || []).filter(url => !voiceNotesToDelete.includes(url))
+        const existingAnalysisPhotos = (tradeToEdit?.analysis_photos || []).filter(url => !analysisPhotosToDelete.includes(url))
+        
+        data.voice_notes = existingVoiceNotes
+        data.analysis_photos = existingAnalysisPhotos
       }
       
       // 3. Mettre à jour le trade (édition ou après création)
@@ -359,7 +384,7 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
                 <select
                   id="account_id"
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-                  {...register('account_id')}
+                  {...register('account_id', { required: 'Le compte de trading est requis' })}
                 >
                   <option value="">Sélectionner un compte</option>
                   {accounts.map((account) => (
@@ -368,6 +393,9 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
                     </option>
                   ))}
                 </select>
+                {errors.account_id && (
+                  <p className="text-sm text-red-500">{errors.account_id.message}</p>
+                )}
               </div>
             )}
 
@@ -737,6 +765,7 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
                 disabled={isSubmitting || isUploading}
                 userId={user.id}
                 tradeId={tradeToEdit?.id || 'temp'}
+                showVoiceRecording={voiceRecordingEnabled}
               />
             )}
 
@@ -748,7 +777,15 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
                   {selectedStrategy ? (
                     <div>
                       <p className="text-sm font-semibold mb-2">Stratégie: {selectedStrategy.name}</p>
-                      <StrategyPlanPanel strategy={selectedStrategy} />
+                      <StrategyPlanPanel 
+                        strategy={selectedStrategy}
+                        onDisciplineScoreChange={(score) => {
+                          setValue('discipline_score', score, { shouldDirty: true })
+                        }}
+                        onCheckedRulesChange={setCheckedRules}
+                        initialDisciplineScore={tradeToEdit?.discipline_score}
+                        initialCheckedRules={tradeToEdit?.checked_rules}
+                      />
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground">Sélectionnez une stratégie pour voir le plan</p>
@@ -796,6 +833,9 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
               onDisciplineScoreChange={(score) => {
                 setValue('discipline_score', score, { shouldDirty: true })
               }}
+              onCheckedRulesChange={setCheckedRules}
+              initialDisciplineScore={tradeToEdit?.discipline_score}
+              initialCheckedRules={tradeToEdit?.checked_rules}
             />
           </CardContent>
         </Card>

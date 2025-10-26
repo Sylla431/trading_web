@@ -16,11 +16,13 @@ import { AnimatedIcon, TradingIcons } from '@/components/shared/AnimatedIcon'
 import { Plus, TrendingUp, Target, DollarSign, BarChart3, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Trade } from '@/types'
+import { VoiceRecordingOnboardingDialog } from '@/components/trades/VoiceRecordingOnboardingDialog'
 
 export default function TradesPage() {
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null)
   const [tradeToDuplicate, setTradeToDuplicate] = useState<Trade | null>(null)
+  const [showVoiceOnboarding, setShowVoiceOnboarding] = useState(true)
   const { accounts } = useAccounts()
   const [selectedAccountId, setSelectedAccountId] = useState<string>('')
   const { trades, loading, deleteTrade, fetchTrades } = useTrades(selectedAccountId || undefined)
@@ -342,6 +344,18 @@ export default function TradesPage() {
           }}
           tradeToEdit={selectedTrade || undefined}
           tradeToDuplicate={tradeToDuplicate || undefined}
+        />
+      )}
+
+      {/* Popup d'onboarding pour les enregistrements vocaux */}
+      {showVoiceOnboarding && (
+        <VoiceRecordingOnboardingDialog
+          onPreferenceSet={(enabled) => {
+            setShowVoiceOnboarding(false)
+            if (enabled) {
+              toast.success('Enregistrements vocaux activés !')
+            }
+          }}
         />
       )}
     </div>

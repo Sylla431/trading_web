@@ -34,6 +34,7 @@ interface AttachmentsManagerProps {
   disabled?: boolean
   userId: string
   tradeId: string
+  showVoiceRecording?: boolean
 }
 
 export function AttachmentsManager({
@@ -45,7 +46,8 @@ export function AttachmentsManager({
   onAnalysisPhotosDelete,
   disabled = false,
   userId,
-  tradeId
+  tradeId,
+  showVoiceRecording = true
 }: AttachmentsManagerProps) {
   const [newVoiceFiles, setNewVoiceFiles] = useState<File[]>([])
   const [newPhotoFiles, setNewPhotoFiles] = useState<File[]>([])
@@ -161,17 +163,19 @@ export function AttachmentsManager({
         <CardTitle className="text-lg">Médias d&apos;analyse</CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="voice" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="voice" className="flex items-center gap-2">
-              <FileAudio className="h-4 w-4" />
-              Enregistrements vocaux
-              {(activeVoiceNotes.length + newVoiceFiles.length) > 0 && (
-                <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
-                  {activeVoiceNotes.length + newVoiceFiles.length}
-                </span>
-              )}
-            </TabsTrigger>
+        <Tabs defaultValue={showVoiceRecording ? "voice" : "photos"} className="w-full">
+          <TabsList className={`grid w-full ${showVoiceRecording ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            {showVoiceRecording && (
+              <TabsTrigger value="voice" className="flex items-center gap-2">
+                <FileAudio className="h-4 w-4" />
+                Enregistrements vocaux
+                {(activeVoiceNotes.length + newVoiceFiles.length) > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
+                    {activeVoiceNotes.length + newVoiceFiles.length}
+                  </span>
+                )}
+              </TabsTrigger>
+            )}
             <TabsTrigger value="photos" className="flex items-center gap-2">
               <ImageIcon className="h-4 w-4" />
               Photos d&apos;analyse
@@ -183,7 +187,8 @@ export function AttachmentsManager({
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="voice" className="space-y-4 mt-4">
+          {showVoiceRecording && (
+            <TabsContent value="voice" className="space-y-4 mt-4">
             {/* Fichiers audio existants */}
             {activeVoiceNotes.length > 0 && (
               <div className="space-y-2">
@@ -255,7 +260,8 @@ export function AttachmentsManager({
                 disabled={disabled}
               />
             </div>
-          </TabsContent>
+            </TabsContent>
+          )}
 
           <TabsContent value="photos" className="space-y-4 mt-4">
             {/* Photos existantes */}
