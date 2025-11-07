@@ -9,11 +9,14 @@ import { Badge } from '@/components/ui/badge'
 import { CreditCard, CheckCircle, Clock, AlertCircle, Calendar } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils/cn'
+import type { Database } from '@/types/database.types'
+
+type PaymentHistoryRow = Database['public']['Tables']['payment_history']['Row']
 
 export default function SubscriptionPage() {
   const { user, profile } = useAuth()
   const { isActive, daysRemaining, expiresAt, isExpired, loading } = useSubscription()
-  const [paymentHistory, setPaymentHistory] = useState<any[]>([])
+  const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryRow[]>([])
   const [isPendingActivation, setIsPendingActivation] = useState(false)
   
   // Les administrateurs n'ont pas besoin d'abonnement

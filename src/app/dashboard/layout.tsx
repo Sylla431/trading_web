@@ -1,10 +1,12 @@
 'use client'
 
+import { useEffect } from 'react'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSubscription } from '@/lib/hooks/useSubscription'
 import { useRouter, usePathname } from 'next/navigation'
-import { useEffect } from 'react'
+
+const PUBLIC_ROUTES = ['/dashboard/subscription', '/dashboard/settings', '/admin']
 
 export default function DashboardLayout({
   children,
@@ -29,9 +31,6 @@ export default function DashboardLayout({
     console.warn('⚠️ PROBLÈME DE CACHE DÉTECTÉ - isActive est undefined, videz le cache !')
   }
 
-  // Routes qui ne nécessitent pas d'abonnement actif
-  const publicRoutes = ['/dashboard/subscription', '/dashboard/settings', '/admin']
-  
   // Les administrateurs ont accès à toutes les pages
   const isAdmin = profile?.account_type === 'admin'
 
@@ -77,7 +76,7 @@ export default function DashboardLayout({
     // Vérifier l'abonnement uniquement si l'utilisateur est connecté et que la route nécessite un abonnement
     // Les administrateurs ont accès à toutes les pages
     if (!loading && user && !subscriptionLoading && !isAdmin) {
-      const isPublicRoute = publicRoutes.some(route => pathname?.startsWith(route))
+      const isPublicRoute = PUBLIC_ROUTES.some(route => pathname?.startsWith(route))
       
       // Si pas d'abonnement actif et pas sur une route publique, rediriger immédiatement
       if (!isPublicRoute && !isActive) {
@@ -110,7 +109,7 @@ export default function DashboardLayout({
   }
 
   // Déterminer si la route actuelle est publique
-  const isPublicRoute = publicRoutes.some(route => pathname?.startsWith(route))
+  const isPublicRoute = PUBLIC_ROUTES.some(route => pathname?.startsWith(route))
   
   // BLOQUER L'ACCÈS : Si pas d'abonnement actif et pas sur une route publique et pas admin
   // Cette vérification doit se faire APRÈS que le chargement soit terminé
@@ -136,7 +135,7 @@ export default function DashboardLayout({
       <div className="flex h-screen items-center justify-center">
         <div className="text-center space-y-4">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
-          <p className="text-muted-foreground">Redirection vers la page d'abonnement...</p>
+          <p className="text-muted-foreground">Redirection vers la page d&apos;abonnement...</p>
           <p className="text-sm text-muted-foreground">Vous devez avoir un abonnement actif pour accéder à cette page.</p>
         </div>
       </div>
