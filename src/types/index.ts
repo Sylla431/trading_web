@@ -70,8 +70,11 @@ export interface Profile {
   account_type: AccountType
   is_premium: boolean
   subscription_tier: SubscriptionTier
+  subscription_expires_at?: string | null
   theme: Theme
   language: string
+  created_at?: string
+  updated_at?: string
 }
 
 export interface Strategy {

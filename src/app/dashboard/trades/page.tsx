@@ -151,9 +151,9 @@ export default function TradesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold flex items-center gap-3">
             <AnimatedIcon icon={TradingIcons.chartUp} size={36} />
             Mes trades
           </h1>
@@ -161,12 +161,12 @@ export default function TradesPage() {
             Gérez et analysez tous vos trades avec filtres avancés
           </p>
         </div>
-        <div className="flex gap-3 items-center">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           {accounts.length > 0 && (
             <select
               value={selectedAccountId}
               onChange={(e) => setSelectedAccountId(e.target.value)}
-              className="h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+              className="h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm sm:w-auto"
               title="Filtrer par compte"
             >
               <option value="">Tous les comptes</option>
@@ -177,19 +177,21 @@ export default function TradesPage() {
               ))}
             </select>
           )}
-          <Button onClick={fetchTrades} variant="outline" size="sm" className="gap-2">
-            <RefreshCw className="w-4 h-4" />
-            Actualiser
-          </Button>
-          <Button onClick={() => setShowAddDialog(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Ajouter un trade
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button onClick={fetchTrades} variant="outline" size="sm" className="gap-2 w-full sm:w-auto">
+              <RefreshCw className="w-4 h-4" />
+              Actualiser
+            </Button>
+            <Button onClick={() => setShowAddDialog(true)} className="gap-2 w-full sm:w-auto">
+              <Plus className="h-4 w-4" />
+              Ajouter un trade
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Stats Summary avec effets 3D */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatsCard3D
           title="Total trades"
           value={filteredAndSortedTrades.length}
@@ -274,8 +276,8 @@ export default function TradesPage() {
       ) : (
         <>
           {/* Vue grille */}
-          {viewMode === 'grid' ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {viewMode === 'grid' ? (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
               {paginatedTrades.map((trade) => (
                 <TradeCard
                   key={trade.id}
@@ -286,8 +288,8 @@ export default function TradesPage() {
               ))}
             </div>
           ) : (
-            /* Vue liste */
-            <div className="grid gap-3 md:grid-cols-2">
+        /* Vue liste */
+        <div className="grid gap-3 sm:grid-cols-2">
               {paginatedTrades.map((trade) => (
                 <TradeCard
                   key={trade.id}

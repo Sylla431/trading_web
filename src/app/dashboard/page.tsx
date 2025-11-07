@@ -32,9 +32,9 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Tableau de bord</h1>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold">Tableau de bord</h1>
           <p className="text-muted-foreground">
             Bienvenue sur votre journal de trading
           </p>
@@ -43,7 +43,7 @@ export default function DashboardPage() {
           variant="outline" 
           size="sm" 
           onClick={fetchTrades}
-          className="gap-2"
+          className="gap-2 w-full sm:w-auto"
         >
           <RefreshCw className="w-4 h-4" />
           Actualiser
@@ -51,7 +51,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Cards avec effets 3D */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatsCard3D
           title="Trades totaux"
           value={stats.totalTrades}
@@ -86,7 +86,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Actions avec icônes animées */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card className="group hover:shadow-2xl hover:shadow-primary/20 transition-all duration-300 cursor-pointer hover:scale-[1.02] border-2 border-border/50 hover:border-primary/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -128,7 +128,7 @@ export default function DashboardPage() {
 
       {/* Recent Trades */}
       <Card className="border-2 border-border/50">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
               <AnimatedIcon icon={TradingIcons.notebook} size={24} />
@@ -139,7 +139,7 @@ export default function DashboardPage() {
             </CardDescription>
           </div>
           <Link href="/dashboard/trades">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="w-full sm:w-auto">
               Voir tout
             </Button>
           </Link>
@@ -158,9 +158,9 @@ export default function DashboardPage() {
               {recentTrades.map((trade) => (
                 <div
                   key={trade.id}
-                  className="flex items-center justify-between p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
+                  className="flex flex-col gap-4 p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 min-w-0">
                     <div className={`p-2 rounded-lg ${
                       trade.trade_type === 'long' 
                         ? 'trade-long-bg trade-long' 

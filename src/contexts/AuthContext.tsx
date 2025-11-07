@@ -4,11 +4,13 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { User, AuthError } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types'
+import { checkSubscriptionStatus } from '@/lib/services/subscription'
 
 interface AuthContextType {
   user: User | null
   profile: Profile | null
   loading: boolean
+  hasActiveSubscription: boolean
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: AuthError | null }>
   signOut: () => Promise<void>
@@ -21,6 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -51,19 +54,108 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const loadProfile = async (userId: string) => {
+    console.log('👤 AuthContext - loadProfile appelé:', { userId })
+    setLoading(true)
+    
     try {
+      // Vérifier d'abord si l'utilisateur est authentifié
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (!authUser || authUser.id !== userId) {
+        console.error('❌ AuthContext - Utilisateur non authentifié ou ID ne correspond pas')
+        setProfile(null)
+        setLoading(false)
+        return
+      }
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('❌ AuthContext - Erreur chargement profil:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          error: error
+        })
+        
+        // Si le profil n'existe pas (code PGRST116), créer un profil par défaut
+        if (error.code === 'PGRST116') {
+          console.log('⚠️ AuthContext - Profil n\'existe pas, création d\'un profil par défaut...')
+          try {
+            const { data: newProfile, error: createError } = await supabase
+              .from('profiles')
+              .insert({
+                id: userId,
+                email: authUser.email || '',
+                full_name: authUser.user_metadata?.full_name || null,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              })
+              .select()
+              .single()
+
+            if (createError) {
+              console.error('❌ AuthContext - Erreur création profil:', createError)
+              setProfile(null)
+              setLoading(false)
+              return
+            }
+
+            console.log('✅ AuthContext - Profil créé:', newProfile)
+            setProfile(newProfile as Profile)
+            setHasActiveSubscription(false)
+            setLoading(false)
+            return
+          } catch (createErr) {
+            console.error('❌ AuthContext - Erreur lors de la création du profil:', createErr)
+            setProfile(null)
+            setLoading(false)
+            return
+          }
+        }
+        
+        // Pour les autres erreurs, ne pas bloquer l'application
+        setProfile(null)
+        setLoading(false)
+        return
+      }
+      
+      if (!data) {
+        console.error('❌ AuthContext - Aucune donnée retournée')
+        setProfile(null)
+        setLoading(false)
+        return
+      }
+      
+      console.log('✅ AuthContext - Profil chargé:', { 
+        id: data?.id, 
+        email: data?.email,
+        is_premium: data?.is_premium,
+        subscription_expires_at: data?.subscription_expires_at,
+        account_type: data?.account_type
+      })
       setProfile(data as Profile)
+
+      // Vérifier le statut de l'abonnement
+      try {
+        console.log('🔍 AuthContext - Vérification abonnement...')
+        const subscriptionStatus = await checkSubscriptionStatus(userId)
+        console.log('📊 AuthContext - Statut abonnement:', subscriptionStatus)
+        setHasActiveSubscription(subscriptionStatus.isActive)
+      } catch (subscriptionError) {
+        console.error('❌ AuthContext - Erreur lors de la vérification de l\'abonnement:', subscriptionError)
+        setHasActiveSubscription(false)
+      }
     } catch (error) {
-      console.error('Erreur lors du chargement du profil:', error)
+      console.error('❌ AuthContext - Erreur lors du chargement du profil:', error)
+      setProfile(null)
     } finally {
       setLoading(false)
+      console.log('✅ AuthContext - loadProfile terminé')
     }
   }
 
@@ -112,6 +204,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     profile,
     loading,
+    hasActiveSubscription,
     signIn,
     signUp,
     signOut,

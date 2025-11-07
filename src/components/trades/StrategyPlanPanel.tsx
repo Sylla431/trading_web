@@ -38,7 +38,7 @@ export function StrategyPlanPanel({
       setCheckedRules(new Set(initialCheckedRules))
     } else {
       // Mode création : réinitialiser
-      setCheckedRules(new Set())
+    setCheckedRules(new Set())
     }
   }, [strategy?.id, initialCheckedRules])
 

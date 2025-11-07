@@ -31,11 +31,11 @@ export function TradeCard({ trade, onDetails, onDelete }: TradeCardProps) {
 
   return (
     <Card className="group hover:scale-[1.02] transition-all duration-300 border-2 border-border/50 hover:border-primary/50 relative overflow-hidden">
-      <CardContent className="p-4">
+      <CardContent className="p-4 space-y-3">
         {/* Header compact */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <h3 className="text-xl font-bold">{trade.symbol}</h3>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-center gap-2 min-w-0">
+            <h3 className="text-xl font-bold truncate">{trade.symbol}</h3>
             <span
               className={cn(
                 'px-2 py-0.5 rounded text-xs font-medium flex items-center gap-1',
@@ -55,10 +55,12 @@ export function TradeCard({ trade, onDetails, onDelete }: TradeCardProps) {
 
           {/* Profit/Perte */}
           {isProfitCalculated && (
-            <div className={cn(
-              'px-3 py-1 rounded-lg font-bold text-sm',
-              isProfit ? 'profit-text' : 'loss-text'
-            )}>
+            <div
+              className={cn(
+                'px-3 py-1 rounded-lg font-bold text-sm sm:self-end',
+                isProfit ? 'profit-text' : 'loss-text'
+              )}
+            >
               {isProfit ? '+' : ''}
               {trade.net_profit?.toFixed(2) ?? '0.00'} $
             </div>
@@ -66,7 +68,7 @@ export function TradeCard({ trade, onDetails, onDelete }: TradeCardProps) {
         </div>
 
         {/* Infos essentielles */}
-        <div className="grid grid-cols-2 gap-2 mb-3 text-sm">
+        <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
           <div>
             <span className="text-muted-foreground">Taille: </span>
             <span className="font-medium">{trade.lot_size}</span>
@@ -78,7 +80,7 @@ export function TradeCard({ trade, onDetails, onDelete }: TradeCardProps) {
         </div>
 
         {/* Date, stratégie et médias */}
-        <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
+        <div className="flex flex-col gap-2 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-1">
             <Calendar className="w-3 h-3" />
             {format(new Date(trade.entry_time), 'dd MMM yyyy', { locale: fr })}
@@ -96,20 +98,20 @@ export function TradeCard({ trade, onDetails, onDelete }: TradeCardProps) {
                 <span className="text-xs">{mediaCount}</span>
               </div>
             )}
-            {trade.strategy_name && (
-              <span className="px-2 py-0.5 rounded bg-primary/10 text-primary font-medium">
-                {trade.strategy_name}
-              </span>
-            )}
+          {trade.strategy_name && (
+            <span className="px-2 py-0.5 rounded bg-primary/10 text-primary font-medium">
+              {trade.strategy_name}
+            </span>
+          )}
           </div>
         </div>
 
         {/* Actions compactes */}
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <Button
             size="sm"
             variant="outline"
-            className="flex-1 h-8 text-xs"
+            className="h-9 text-xs sm:flex-1"
             onClick={() => onDetails?.(trade)}
           >
             <Eye className="w-3 h-3 mr-1" />
@@ -118,7 +120,7 @@ export function TradeCard({ trade, onDetails, onDelete }: TradeCardProps) {
           <Button
             size="sm"
             variant="ghost"
-            className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+            className="flex h-9 w-full items-center justify-center p-0 hover:bg-destructive/10 hover:text-destructive sm:w-9"
             onClick={() => onDelete?.(trade.id)}
           >
             <Trash2 className="w-3 h-3" />

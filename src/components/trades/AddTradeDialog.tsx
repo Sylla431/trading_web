@@ -338,9 +338,9 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
         }
       }
 
-      console.log('🎉 Succès:', isEdit ? 'Trade mis à jour' : 'Trade ajouté')
-      toast.success(isEdit ? 'Trade mis à jour !' : 'Trade ajouté avec succès !')
-      onClose()
+        console.log('🎉 Succès:', isEdit ? 'Trade mis à jour' : 'Trade ajouté')
+        toast.success(isEdit ? 'Trade mis à jour !' : 'Trade ajouté avec succès !')
+        onClose()
       
     } catch (err) {
       console.error('💥 Erreur catch:', err)
@@ -354,11 +354,11 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 overflow-hidden">
-      <div className="w-full max-w-7xl h-[90vh] gap-6" style={{ display: 'grid', gridTemplateColumns: '1fr 400px', minWidth: '800px' }}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-background/80 backdrop-blur-sm p-4 sm:items-center">
+      <div className="grid w-full max-w-3xl gap-6 rounded-2xl bg-transparent lg:h-[90vh] lg:max-w-6xl lg:grid-cols-[minmax(0,1fr)_360px]">
         {/* Formulaire principal */}
-        <Card className="flex flex-col overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between flex-shrink-0 border-b">
+        <Card className="flex flex-col overflow-hidden shadow-xl">
+          <CardHeader className="flex flex-col gap-4 border-b sm:flex-row sm:items-start sm:justify-between">
             <div>
               <CardTitle>
                 {isEdit ? 'Éditer un trade' : isDuplicate ? 'Dupliquer un trade' : 'Ajouter un trade'}
@@ -371,7 +371,7 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
                   : 'Enregistrez les détails de votre trade'}
               </CardDescription>
             </div>
-            <Button variant="ghost" size="icon" onClick={onClose}>
+            <Button variant="ghost" size="icon" onClick={onClose} className="self-end">
               <X className="h-4 w-4" />
             </Button>
           </CardHeader>
@@ -400,7 +400,7 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
             )}
 
             {/* Informations de base */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="symbol">Symbole *</Label>
                 <Input
@@ -460,7 +460,7 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
             </div>
 
             {/* SL/TP */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="stop_loss">Stop Loss</Label>
                 <Input
@@ -526,7 +526,7 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
             </div>
 
             {/* Dates */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="entry_time">Date d&apos;entrée *</Label>
@@ -547,7 +547,7 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
                   type="datetime-local"
                   {...register('entry_time')}
                 />
-                <div className="flex gap-2 mt-2">
+                <div className="flex flex-wrap gap-2 mt-2">
                   <Button
                     type="button"
                     variant="ghost"
@@ -604,7 +604,7 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
                   type="datetime-local"
                   {...register('exit_time')}
                 />
-                <div className="flex gap-2 mt-2">
+                <div className="flex flex-wrap gap-2 mt-2">
                   <Button
                     type="button"
                     variant="ghost"
@@ -641,7 +641,7 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
               
               <div className="space-y-3">
                 <Label>Humeur avant le trade</Label>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
                   {[
                     { value: 'confident', label: 'Confiant', icon: '😎', color: 'text-green-600' },
                     { value: 'calm', label: 'Calme', icon: '😌', color: 'text-blue-500' },
@@ -668,7 +668,7 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
 
               <div className="space-y-3">
                 <Label>Humeur après le trade</Label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {[
                     { value: 'euphoric', label: 'Euphorique', icon: '🚀', color: 'text-green-600' },
                     { value: 'confident', label: 'Confiant', icon: '😎', color: 'text-green-500' },
@@ -770,7 +770,7 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
             )}
 
             {/* Plan de stratégie - Version mobile */}
-            <div className="hidden">
+            <div className="lg:hidden">
               <div className="space-y-2">
                 <Label>Plan de trading</Label>
                 <div className="p-4 rounded-lg border bg-secondary/30">
@@ -795,13 +795,14 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
             </div>
 
             {/* Boutons */}
-            <div className="flex justify-end gap-4">
-              <Button type="button" variant="outline" onClick={onClose}>
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <Button type="button" variant="outline" onClick={onClose} className="w-full sm:w-auto">
                 Annuler
               </Button>
               <Button 
                 type="submit" 
                 disabled={isSubmitting || isUploading}
+                className="w-full sm:w-auto"
                 onClick={() => {
                   console.log('🖱️ Bouton cliqué!', { isEdit, isValid, errors })
                 }}
@@ -809,8 +810,8 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
                 {isUploading 
                   ? 'Upload des médias...'
                   : isSubmitting 
-                    ? (isEdit ? 'Mise à jour...' : 'Ajout en cours...') 
-                    : (isEdit ? 'Mettre à jour le trade' : 'Ajouter le trade')
+                  ? (isEdit ? 'Mise à jour...' : 'Ajout en cours...') 
+                  : (isEdit ? 'Mettre à jour le trade' : 'Ajouter le trade')
                 }
               </Button>
             </div>
@@ -819,8 +820,8 @@ export function AddTradeDialog({ onClose, tradeToEdit, tradeToDuplicate }: AddTr
       </Card>
 
       {/* Panneau du plan de trading */}
-      <div className="flex flex-col overflow-hidden">
-        <Card className="flex flex-col h-full">
+      <div className="hidden overflow-hidden lg:flex lg:flex-col">
+        <Card className="flex h-full flex-col shadow-xl">
           <CardHeader className="flex-shrink-0 border-b">
             <CardTitle className="text-lg">Plan de trading</CardTitle>
             <CardDescription>
