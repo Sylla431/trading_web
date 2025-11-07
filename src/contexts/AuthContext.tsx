@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { User, AuthError } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types'
+import type { Database } from '@/types/database.types'
 import { checkSubscriptionStatus } from '@/lib/services/subscription'
 
 interface AuthContextType {
@@ -94,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 full_name: authUser.user_metadata?.full_name || null,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
-              })
+              } as Database['public']['Tables']['profiles']['Insert'])
               .select()
               .single()
 
