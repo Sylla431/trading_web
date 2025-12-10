@@ -110,7 +110,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               theme: 'light',
               language: 'fr',
             }
-            // Cast to any to bypass a supabase-ssr typing issue on insert
+            // Cast to bypass a supabase-ssr typing issue on insert
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { data: newProfile, error: createError } = await (supabase
               .from('profiles') as any)
               .insert(newProfilePayload)

@@ -94,6 +94,7 @@ export default function AdminSubscriptionsPage() {
     } else if (!selectedUser) {
       setLastSelectedUserId(null)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedUser?.id, lastSelectedUserId])
 
   const searchUser = async () => {
@@ -480,7 +481,7 @@ export default function AdminSubscriptionsPage() {
               })() && (
                 <div className="p-4 rounded-lg border border-primary/20 bg-primary/5 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Résumé de l'activation:</span>
+                    <span className="text-sm font-medium">Résumé de l&apos;activation:</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Montant:</span>
@@ -493,7 +494,7 @@ export default function AdminSubscriptionsPage() {
                     <span className="font-semibold">1 mois</span>
                   </div>
                   <div className="flex justify-between text-sm pt-2 border-t">
-                    <span className="text-muted-foreground">Nouvelle date d'expiration:</span>
+                    <span className="text-muted-foreground">Nouvelle date d&apos;expiration:</span>
                     <span className="font-semibold">
                       {formatDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString())}
                     </span>
