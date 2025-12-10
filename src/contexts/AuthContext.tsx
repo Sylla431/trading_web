@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { User, AuthError } from '@supabase/supabase-js'
+import { User, AuthError, SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types'
 import type { Database } from '@/types/database.types'
@@ -25,7 +25,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
-  const supabase = createClient()
+  const supabase: SupabaseClient<Database> = createClient()
+  const PROFILE_TABLE: keyof Database['public']['Tables'] = 'profiles'
 
   useEffect(() => {
     // Vérifier la session active
@@ -87,15 +88,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (error.code === 'PGRST116') {
           console.log('⚠️ AuthContext - Profil n\'existe pas, création d\'un profil par défaut...')
           try {
-            const { data: newProfile, error: createError } = await supabase
-              .from('profiles')
-              .insert({
-                id: userId,
-                email: authUser.email || '',
-                full_name: authUser.user_metadata?.full_name || null,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              } as Database['public']['Tables']['profiles']['Insert'])
+            const metadataFullName = authUser.user_metadata?.full_name
+          const newProfilePayload: Database['public']['Tables']['profiles']['Insert'] = {
+              id: userId,
+              email: authUser.email ?? '',
+              full_name: typeof metadataFullName === 'string' ? metadataFullName : null,
+              avatar_url: (authUser.user_metadata?.avatar_url as string | null | undefined) ?? null,
+              default_currency: 'USD',
+              timezone: 'UTC',
+              preferred_broker: null,
+              account_type: 'individual',
+              is_premium: false,
+              subscription_tier: 'free',
+              subscription_expires_at: null,
+              trial_ends_at: null,
+              two_factor_enabled: false,
+              two_factor_secret: null,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              last_login_at: null,
+              theme: 'light',
+              language: 'fr',
+            }
+            // Cast to any to bypass a supabase-ssr typing issue on insert
+            const { data: newProfile, error: createError } = await (supabase
+              .from('profiles') as any)
+              .insert(newProfilePayload)
               .select()
               .single()
 
@@ -131,15 +149,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false)
         return
       }
+      const profileRow = data as Database['public']['Tables']['profiles']['Row']
       
       console.log('✅ AuthContext - Profil chargé:', { 
-        id: data?.id, 
-        email: data?.email,
-        is_premium: data?.is_premium,
-        subscription_expires_at: data?.subscription_expires_at,
-        account_type: data?.account_type
+        id: profileRow.id, 
+        email: profileRow.email,
+        is_premium: profileRow.is_premium,
+        subscription_expires_at: profileRow.subscription_expires_at,
+        account_type: profileRow.account_type
       })
-      setProfile(data as Profile)
+      setProfile(profileRow as Profile)
 
       // Vérifier le statut de l'abonnement
       try {

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Search, CreditCard, CheckCircle, AlertCircle, Clock, User } from 'lucide-react'
+import { Search, CreditCard, CheckCircle, AlertCircle, Clock, User, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 
@@ -84,6 +84,18 @@ export default function AdminSubscriptionsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin])
 
+  // Réinitialiser le montant seulement quand on sélectionne un nouvel utilisateur différent
+  const [lastSelectedUserId, setLastSelectedUserId] = useState<string | null>(null)
+  useEffect(() => {
+    if (selectedUser && selectedUser.id !== lastSelectedUserId) {
+      // Réinitialiser le montant à la valeur par défaut seulement pour un nouvel utilisateur
+      setAmount('29.99')
+      setLastSelectedUserId(selectedUser.id)
+    } else if (!selectedUser) {
+      setLastSelectedUserId(null)
+    }
+  }, [selectedUser?.id, lastSelectedUserId])
+
   const searchUser = async () => {
     setLoading(true)
     try {
@@ -151,7 +163,11 @@ export default function AdminSubscriptionsPage() {
   }
 
   const handleActivateSubscription = async (userId: string) => {
-    if (!amount || parseFloat(amount) <= 0) {
+    // Normaliser le montant (remplacer virgule par point)
+    const normalizedAmount = amount.replace(',', '.')
+    const amountValue = parseFloat(normalizedAmount)
+    
+    if (!amount || isNaN(amountValue) || amountValue <= 0) {
       toast.error('Veuillez entrer un montant valide')
       return
     }
@@ -162,18 +178,21 @@ export default function AdminSubscriptionsPage() {
         userId,
         1, // 1 mois
         'cash', // Paiement en espèces
-        parseFloat(amount),
+        amountValue,
         'Paiement en espèces - Activation manuelle'
       )
 
       if (result.success) {
-        toast.success('Abonnement activé avec succès !')
+        toast.success('Abonnement activé avec succès !', {
+          description: `Montant: ${amountValue.toFixed(2)} USD - Durée: 1 mois`,
+        })
         setSelectedUser(null)
-        setSearchEmail('')
-        setSearchResults([])
+        setAmount('29.99')
         // Recharger les résultats de recherche
-        if (searchEmail) {
+        if (searchEmail.trim()) {
           await searchUser()
+        } else {
+          await loadAllUsers()
         }
       } else {
         toast.error(result.error || 'Erreur lors de l\'activation')
@@ -309,7 +328,7 @@ export default function AdminSubscriptionsPage() {
                   return (
                     <div
                       key={user.id}
-                      className="p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                      className="p-4 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
                       onClick={() => setSelectedUser(user)}
                     >
                       <div className="flex items-center justify-between">
@@ -375,91 +394,156 @@ export default function AdminSubscriptionsPage() {
         </CardContent>
       </Card>
 
-      {/* Formulaire d'activation */}
+      {/* Formulaire d'activation en popup */}
       {selectedUser && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="w-5 h-5" />
-              Activer l&apos;abonnement
-            </CardTitle>
-            <CardDescription>
-              Pour: {selectedUser.full_name || 'Sans nom'} ({selectedUser.email})
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="p-4 rounded-lg bg-muted space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Statut actuel:</span>
-                <Badge
-                  variant={
-                    selectedUser.is_premium &&
-                    getDaysRemaining(selectedUser.subscription_expires_at) !== null &&
-                    (getDaysRemaining(selectedUser.subscription_expires_at) || 0) > 0
-                      ? 'default'
-                      : 'secondary'
-                  }
-                >
-                  {selectedUser.is_premium &&
-                  getDaysRemaining(selectedUser.subscription_expires_at) !== null &&
-                  (getDaysRemaining(selectedUser.subscription_expires_at) || 0) > 0
-                    ? 'Actif'
-                    : 'Inactif'}
-                </Badge>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader className="flex flex-row items-center justify-between flex-shrink-0 border-b">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="w-5 h-5" />
+                  Activer l&apos;abonnement
+                </CardTitle>
+                <CardDescription>
+                  Pour: {selectedUser.full_name || 'Sans nom'} ({selectedUser.email})
+                </CardDescription>
               </div>
-              {selectedUser.subscription_expires_at && (
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Expire le:</span>
-                  <span className="text-sm font-medium">
-                    {formatDate(selectedUser.subscription_expires_at)}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="amount">Montant du paiement (USD)</Label>
-              <Input
-                id="amount"
-                type="number"
-                step="0.01"
-                min="0"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="29.99"
-              />
-            </div>
-
-            <div className="flex gap-3 pt-4">
-              <Button
-                onClick={() => handleActivateSubscription(selectedUser.id)}
-                disabled={activating}
-                className="flex-1"
-              >
-                {activating ? (
-                  <>
-                    <Clock className="w-4 h-4 mr-2 animate-spin" />
-                    Activation...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Activer l&apos;abonnement (1 mois)
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="outline"
+                  <Button 
+                variant="ghost" 
+                size="icon" 
                 onClick={() => {
                   setSelectedUser(null)
-                  setAmount('29.99')
+                  // Ne pas réinitialiser le montant pour préserver la valeur saisie
                 }}
               >
-                Annuler
+                <X className="h-4 w-4" />
               </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-6">
+              <div className="p-4 rounded-lg bg-muted space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Statut actuel:</span>
+                  <Badge
+                    variant={
+                      selectedUser.is_premium &&
+                      getDaysRemaining(selectedUser.subscription_expires_at) !== null &&
+                      (getDaysRemaining(selectedUser.subscription_expires_at) || 0) > 0
+                        ? 'default'
+                        : 'secondary'
+                    }
+                  >
+                    {selectedUser.is_premium &&
+                    getDaysRemaining(selectedUser.subscription_expires_at) !== null &&
+                    (getDaysRemaining(selectedUser.subscription_expires_at) || 0) > 0
+                      ? 'Actif'
+                      : 'Inactif'}
+                  </Badge>
+                </div>
+                {selectedUser.subscription_expires_at && (
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Expire le:</span>
+                    <span className="text-sm font-medium">
+                      {formatDate(selectedUser.subscription_expires_at)}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="amount">Montant du paiement (USD)</Label>
+                <Input
+                  id="amount"
+                  type="text"
+                  inputMode="decimal"
+                  value={amount}
+                  onChange={(e) => {
+                    // Permettre la virgule ou le point comme séparateur décimal
+                    let value = e.target.value.replace(',', '.')
+                    // Ne garder que les chiffres et un point décimal
+                    value = value.replace(/[^0-9.]/g, '')
+                    // Ne garder qu'un seul point décimal
+                    const parts = value.split('.')
+                    if (parts.length > 2) {
+                      value = parts[0] + '.' + parts.slice(1).join('')
+                    }
+                    setAmount(value)
+                  }}
+                  placeholder="29.99"
+                />
+              </div>
+
+              {/* Résumé de l'activation */}
+              {amount && (() => {
+                const normalizedAmount = amount.replace(',', '.')
+                const amountValue = parseFloat(normalizedAmount)
+                return !isNaN(amountValue) && amountValue > 0
+              })() && (
+                <div className="p-4 rounded-lg border border-primary/20 bg-primary/5 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Résumé de l'activation:</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Montant:</span>
+                    <span className="font-semibold">
+                      {parseFloat(amount.replace(',', '.')).toFixed(2)} USD
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Durée:</span>
+                    <span className="font-semibold">1 mois</span>
+                  </div>
+                  <div className="flex justify-between text-sm pt-2 border-t">
+                    <span className="text-muted-foreground">Nouvelle date d'expiration:</span>
+                    <span className="font-semibold">
+                      {formatDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString())}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-4">
+                <Button
+                  onClick={() => handleActivateSubscription(selectedUser.id)}
+                  disabled={
+                    activating ||
+                    (selectedUser.is_premium &&
+                      getDaysRemaining(selectedUser.subscription_expires_at) !== null &&
+                      (getDaysRemaining(selectedUser.subscription_expires_at) || 0) > 0)
+                  }
+                  className="flex-1"
+                >
+                  {activating ? (
+                    <>
+                      <Clock className="w-4 h-4 mr-2 animate-spin" />
+                      Activation...
+                    </>
+                  ) : selectedUser.is_premium &&
+                    getDaysRemaining(selectedUser.subscription_expires_at) !== null &&
+                    (getDaysRemaining(selectedUser.subscription_expires_at) || 0) > 0 ? (
+                    <>
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Déjà actif
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Activer l&apos;abonnement (1 mois)
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedUser(null)
+                    // Ne pas réinitialiser le montant pour préserver la valeur saisie
+                  }}
+                >
+                  Annuler
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   )
