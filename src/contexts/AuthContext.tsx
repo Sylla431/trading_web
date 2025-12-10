@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { User, AuthError, SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types'
@@ -26,36 +26,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
   const supabase: SupabaseClient<Database> = createClient()
-  const PROFILE_TABLE: keyof Database['public']['Tables'] = 'profiles'
 
-  useEffect(() => {
-    // Vérifier la session active
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        loadProfile(session.user.id)
-      } else {
-        setLoading(false)
-      }
-    })
-
-    // Écouter les changements d'authentification
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        loadProfile(session.user.id)
-      } else {
-        setProfile(null)
-        setLoading(false)
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  const loadProfile = async (userId: string) => {
+  const loadProfile = useCallback(async (userId: string) => {
     console.log('👤 AuthContext - loadProfile appelé:', { userId })
     setLoading(true)
     
@@ -112,8 +84,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
             // Cast to bypass a supabase-ssr typing issue on insert
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data: newProfile, error: createError } = await (supabase
-              .from('profiles') as any)
+            const profilesQuery = supabase.from('profiles') as any
+            const { data: newProfile, error: createError } = await profilesQuery
               .insert(newProfilePayload)
               .select()
               .single()
@@ -178,7 +150,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
       console.log('✅ AuthContext - loadProfile terminé')
     }
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    // Vérifier la session active
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      if (session?.user) {
+        loadProfile(session.user.id)
+      } else {
+        setLoading(false)
+      }
+    })
+
+    // Écouter les changements d'authentification
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      if (session?.user) {
+        loadProfile(session.user.id)
+      } else {
+        setProfile(null)
+        setLoading(false)
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [loadProfile, supabase])
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -189,7 +188,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signUp = async (email: string, password: string, fullName?: string) => {
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
