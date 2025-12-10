@@ -13,14 +13,14 @@ export default function AccountsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Comptes</h1>
-          <p className="text-muted-foreground">Gérez vos comptes de trading</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Comptes</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Gérez vos comptes de trading</p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={fetchAccounts}>Rafraîchir</Button>
-          <Button onClick={() => setShowAdd(true)} className="gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <Button variant="outline" onClick={fetchAccounts} className="w-full sm:w-auto">Rafraîchir</Button>
+          <Button onClick={() => setShowAdd(true)} className="gap-2 w-full sm:w-auto">
             <Plus className="w-4 h-4" /> Nouveau compte
           </Button>
         </div>

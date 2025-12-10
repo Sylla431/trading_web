@@ -77,15 +77,15 @@ export default function AnalyticsPage() {
       {/* Header with Account Filter */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Analyses et statistiques</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Analyses et statistiques</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Analysez vos performances de trading en détail
           </p>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Time Period Filter */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <label className="text-sm font-medium whitespace-nowrap">
               Période :
             </label>
@@ -97,7 +97,7 @@ export default function AnalyticsPage() {
           
           {/* Account Filter */}
           {accounts.length > 0 && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
               <label htmlFor="account-filter" className="text-sm font-medium whitespace-nowrap">
                 Compte :
               </label>

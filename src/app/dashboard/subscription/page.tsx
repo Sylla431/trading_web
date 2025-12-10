@@ -80,8 +80,8 @@ export default function SubscriptionPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Abonnement</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-2xl sm:text-3xl font-bold">Abonnement</h1>
+        <p className="text-sm sm:text-base text-muted-foreground mt-2">
           {isAdmin 
             ? 'En tant qu\'administrateur, vous avez accès à toutes les fonctionnalités sans abonnement.'
             : 'Gérez votre abonnement et accédez à toutes les fonctionnalités premium'}

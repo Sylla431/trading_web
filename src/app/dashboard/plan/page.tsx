@@ -88,17 +88,17 @@ export default function PlanPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-            <AnimatedIcon icon={TradingIcons.target} size={36} />
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2 flex items-center gap-2 sm:gap-3">
+            <AnimatedIcon icon={TradingIcons.target} size={28} className="sm:w-9 sm:h-9" />
             Plan de trading
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Définissez vos règles et objectifs de trading
           </p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2 w-full sm:w-auto">
           <Plus className="w-4 h-4" />
           Nouveau plan
         </Button>

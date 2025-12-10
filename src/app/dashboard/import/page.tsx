@@ -10,11 +10,11 @@ export default function ImportPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-          <AnimatedIcon icon={TradingIcons.rocket} size={36} />
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2 flex items-center gap-2 sm:gap-3">
+          <AnimatedIcon icon={TradingIcons.rocket} size={28} className="sm:w-9 sm:h-9" />
           Importer des trades
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm sm:text-base text-muted-foreground">
           Importez vos trades depuis MetaTrader, TradingView ou CSV
         </p>
       </div>

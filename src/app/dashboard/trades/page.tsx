@@ -153,11 +153,11 @@ export default function TradesPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <AnimatedIcon icon={TradingIcons.chartUp} size={36} />
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 sm:gap-3">
+            <AnimatedIcon icon={TradingIcons.chartUp} size={28} className="sm:w-9 sm:h-9" />
             Mes trades
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Gérez et analysez tous vos trades avec filtres avancés
           </p>
         </div>

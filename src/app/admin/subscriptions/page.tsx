@@ -247,8 +247,8 @@ export default function AdminSubscriptionsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Gestion des abonnements</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-2xl sm:text-3xl font-bold">Gestion des abonnements</h1>
+        <p className="text-sm sm:text-base text-muted-foreground mt-2">
           Activez les abonnements pour les paiements en espèces
         </p>
       </div>
@@ -266,7 +266,7 @@ export default function AdminSubscriptionsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Recherche */}
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <div className="flex-1">
               <Input
                 type="text"
@@ -289,23 +289,25 @@ export default function AdminSubscriptionsPage() {
                 }}
               />
             </div>
-            <Button onClick={searchUser} disabled={loading} variant="outline">
-              {loading ? (
-                <>
-                  <Clock className="w-4 h-4 mr-2 animate-spin" />
-                  Recherche...
-                </>
-              ) : (
-                <>
-                  <Search className="w-4 h-4 mr-2" />
-                  Rechercher
-                </>
-              )}
-            </Button>
-            <Button onClick={loadAllUsers} disabled={loading} variant="outline">
-              <User className="w-4 h-4 mr-2" />
-              Recharger
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={searchUser} disabled={loading} variant="outline" className="flex-1 sm:flex-none">
+                {loading ? (
+                  <>
+                    <Clock className="w-4 h-4 mr-2 animate-spin" />
+                    <span className="hidden sm:inline">Recherche...</span>
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">Rechercher</span>
+                  </>
+                )}
+              </Button>
+              <Button onClick={loadAllUsers} disabled={loading} variant="outline" className="flex-1 sm:flex-none">
+                <User className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Recharger</span>
+              </Button>
+            </div>
           </div>
 
           {/* Liste des utilisateurs */}

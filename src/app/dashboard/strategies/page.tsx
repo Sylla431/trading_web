@@ -69,14 +69,14 @@ export default function StrategiesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Stratégies de trading</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Stratégies de trading</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Gérez vos plans de trading et suivez leurs performances
           </p>
         </div>
-        <Button onClick={() => setShowAddDialog(true)}>
+        <Button onClick={() => setShowAddDialog(true)} className="w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           Nouvelle stratégie
         </Button>
